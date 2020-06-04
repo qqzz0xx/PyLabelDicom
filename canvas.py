@@ -16,6 +16,8 @@ CURSOR_MOVE = QtCore.Qt.ClosedHandCursor
 
 class Canvas(QtWidgets.QWidget):
 
+    image_wapper = None
+
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__()
         self._curCursor = CURSOR_DEFAULT
@@ -49,7 +51,9 @@ class Canvas(QtWidgets.QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.HighQualityAntialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
-        p.setPen(QColor(255, 0, 0))
+        # p.setPen(QColor(255, 0, 0))
+        if self.image_wapper:
+            p.drawImage(0, 0, self.image_wapper.getQImage())
 
         for shape in self.shapes:
             shape.paint(p)

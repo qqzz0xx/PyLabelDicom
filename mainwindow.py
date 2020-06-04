@@ -5,6 +5,7 @@ from canvas import Canvas
 import utils
 import sys
 from loader import Loader
+from imagedata_wapper import ImageDataWapper
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -58,8 +59,12 @@ class MainWindow(QtWidgets.QMainWindow):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
         print(fileName)
 
-        self.loader = Loader()
-        self.loader.loadDicom(fileName)
+        if fileName:
+            self.loader = Loader()
+            self.loader.loadDicom(fileName)
+
+            wapper = ImageDataWapper(self.loader)
+            self.canvas.image_wapper = wapper
 
 
 if __name__ == "__main__":

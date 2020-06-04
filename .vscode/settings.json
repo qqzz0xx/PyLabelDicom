@@ -1,4 +1,4 @@
 {
-    "python.pythonPath": "F:\\Anaconda3\\envs\\labelme\\python.exe",
-    "python.linting.mypyEnabled": true
+    "python.linting.mypyEnabled": true,
+    "python.pythonPath": "C:\\Anaconda3\\python.exe"
 }

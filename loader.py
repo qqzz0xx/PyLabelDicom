@@ -8,18 +8,20 @@ class Loader:
     image_data = None
 
     def getImageData(self):
-        return image_data
+        return self.image_data
 
     def loadDicom(self, path):
-
+        if path is None:
+            return
+            
         img_itk = sitk.ReadImage(path)
         spacing = img_itk.GetSpacing()
         dims = img_itk.GetSize()
         channel = img_itk.GetDimension()
+        frame_count = 1 if len(dims) == 2 else dims[2]
 
         img_nda = sitk.GetArrayFromImage(img_itk)
-        # img_nda = nps.numpy_to_vtk(
-        #     img_nda.ravel(), deep=True, array_type=vtk.VTK_CHAR)
+        img_nda = img_nda.astype('float32')
 
         importer = vtk.vtkImageImport()
         importer.SetDataScalarTypeToFloat()
