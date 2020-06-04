@@ -13,11 +13,11 @@ class Loader:
     def loadDicom(self, path):
         if path is None:
             return
-            
+
         img_itk = sitk.ReadImage(path)
         spacing = img_itk.GetSpacing()
         dims = img_itk.GetSize()
-        channel = img_itk.GetDimension()
+        channel = img_itk.GetNumberOfComponentsPerPixel()
         frame_count = 1 if len(dims) == 2 else dims[2]
         spacing_z = 1 if len(dims) == 2 else spacing[2]
 
@@ -27,19 +27,34 @@ class Loader:
         importer = vtk.vtkImageImport()
         importer.SetDataScalarTypeToFloat()
         importer.SetNumberOfScalarComponents(channel)
-        importer.SetDataExtent(0, dims[0]-1, 0, dims[1]-1, 0,frame_count-1)
-        importer.SetWholeExtent(0, dims[0]-1, 0, dims[1]-1, 0,frame_count-1)
+        importer.SetDataExtent(0, dims[0]-1, 0, dims[1]-1, 0, frame_count-1)
+        importer.SetWholeExtent(0, dims[0]-1, 0, dims[1]-1, 0, frame_count-1)
         importer.SetDataSpacing(spacing[0], spacing[1], spacing_z)
         importer.CopyImportVoidPointer(img_nda, img_nda.nbytes)
         importer.Update()
 
         self.image_data = importer.GetOutput()
 
+        if channel == 1:
+            imageToRgb = vtk.vtkImageMapToColors()
+            imageToRgb.SetOutputFormatToRGB()
+            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
+            imageToRgb.SetInputData(self.image_data)
+            imageToRgb.Update()
+            self.image_data = imageToRgb.GetOutput()
+
+        shift = vtk.vtkImageShiftScale()
+        shift.SetOutputScalarTypeToUnsignedChar()
+        shift.SetInputData(self.image_data)
+        shift.Update()
+
+        self.image_data = shift.GetOutput()
+
         return self.image_data
 
 
 if __name__ == "__main__":
-    path = 'F:\\github\\labeldicom_cpp\\testData\\AT0000_002585271512.dcm'
+    path = 'F:\\github\\labeldicom_cpp\\testData\\5_a.png'
     loader = Loader()
     img = loader.loadDicom(path)
     print(img)
