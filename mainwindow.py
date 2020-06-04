@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loader = Loader()
             self.loader.loadDicom(fileName)
 
-            wapper = ImageDataWapper(self.loader)
+            wapper = ImageDataWapper(self.loader.getImageData())
             self.canvas.image_wapper = wapper
 
 

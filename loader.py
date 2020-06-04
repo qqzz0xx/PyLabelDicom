@@ -19,6 +19,7 @@ class Loader:
         dims = img_itk.GetSize()
         channel = img_itk.GetDimension()
         frame_count = 1 if len(dims) == 2 else dims[2]
+        spacing_z = 1 if len(dims) == 2 else spacing[2]
 
         img_nda = sitk.GetArrayFromImage(img_itk)
         img_nda = img_nda.astype('float32')
@@ -26,9 +27,9 @@ class Loader:
         importer = vtk.vtkImageImport()
         importer.SetDataScalarTypeToFloat()
         importer.SetNumberOfScalarComponents(channel)
-        importer.SetDataExtent(0, dims[2]-1, 0, dims[1]-1, 0, dims[0]-1)
-        importer.SetWholeExtent(0, dims[2]-1, 0, dims[1]-1, 0, dims[0]-1)
-        importer.SetDataSpacing(spacing[0], spacing[1], spacing[2])
+        importer.SetDataExtent(0, dims[0]-1, 0, dims[1]-1, 0,frame_count-1)
+        importer.SetWholeExtent(0, dims[0]-1, 0, dims[1]-1, 0,frame_count-1)
+        importer.SetDataSpacing(spacing[0], spacing[1], spacing_z)
         importer.CopyImportVoidPointer(img_nda, img_nda.nbytes)
         importer.Update()
 
