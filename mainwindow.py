@@ -23,7 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.colorTableDock = QtWidgets.QDockWidget('ColorTable', self)
         self.colorTableDock.setWidget(self.colorTableWidget)
 
-        self.canvas = Canvas()
+        self.canvas = Canvas(self)
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidget(self.canvas)
         scroll_area.setWidgetResizable(True)
@@ -55,6 +55,9 @@ class MainWindow(QtWidgets.QMainWindow):
             utils.addActions(menu, actions)
         return menu
 
+    def showStatusTips(self, tips, dt=3000):
+        self.statusBar().showMessage(tips, 3000)
+
     def open(self):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
         print(fileName)
@@ -65,6 +68,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             wapper = ImageDataWapper(self.loader.getImageData())
             self.canvas.image_wapper = wapper
+
+    def resizeEvent(self, event):
+        self.canvas.adjustSize()
+        self.canvas.update()
 
 
 if __name__ == "__main__":

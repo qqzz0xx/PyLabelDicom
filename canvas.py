@@ -17,9 +17,12 @@ CURSOR_MOVE = QtCore.Qt.ClosedHandCursor
 class Canvas(QtWidgets.QWidget):
 
     image_wapper = None
+    scale = 1
+    main_win = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent):
         super(Canvas, self).__init__()
+        self.main_win = parent
         self._curCursor = CURSOR_DEFAULT
         self.shapes = []
         self.cur_shape = None
@@ -31,8 +34,11 @@ class Canvas(QtWidgets.QWidget):
         self.overrideCursor(CURSOR_DRAW)
 
     def mousePressEvent(self, ev):
+        pos = self.transformPos(ev.localPos())
+        self.main_win.showStatusTips(
+            "world pos: [{0},{1}]".format(pos.x(), pos.y()))
+
         if ev.button() == Qt.LeftButton:
-            pos = ev.localPos()
 
             if self.cur_shape:
                 self.cur_shape.addPoint(pos)
@@ -45,23 +51,47 @@ class Canvas(QtWidgets.QWidget):
     def paintEvent(self, ev):
         # if not self.shapes:
         #     return super(Canvas, self).paintEvent(ev)
+        if not self.image_wapper:
+            return
 
         p = self._Painter
         p.begin(self)
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.HighQualityAntialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
+
+        p.scale(self.scale, self.scale)
+        p.translate(self.offsetToCenter())
         # p.setPen(QColor(255, 0, 0))
-        if self.image_wapper:
-            p.drawImage(0, 0, self.image_wapper.getQImage())
+        p.drawImage(0, 0, self.pixmap())
 
         for shape in self.shapes:
             shape.paint(p)
 
         if self.cur_shape:
             self.cur_shape.paint(p)
-            
+
         p.end()
+
+    def pixmap(self):
+        return self.image_wapper.getQImage()
+
+    def outOfPixmap(self, p):
+        w, h = self.pixmap().width(), self.pixmap().height()
+        return not (0 <= p.x() <= w - 1 and 0 <= p.y() <= h - 1)
+
+    def transformPos(self, point):
+        return point / self.scale - self.offsetToCenter()
+
+    def offsetToCenter(self):
+        pixmap = self.pixmap()
+        s = self.scale
+        area = super(Canvas, self).size()
+        w, h = pixmap.width() * s, pixmap.height() * s
+        aw, ah = area.width(), area.height()
+        x = (aw - w) / (2 * s) if aw > w else 0
+        y = (ah - h) / (2 * s) if ah > h else 0
+        return QtCore.QPoint(x, y)
 
     def leaveEvent(self, ev):
         self.restoreCursor()
