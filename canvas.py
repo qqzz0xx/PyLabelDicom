@@ -30,6 +30,14 @@ class Canvas(QtWidgets.QWidget):
 
         self.setMouseTracking(True)
 
+    def wheelEvent(self, event : QtGui.QWheelEvent):
+        if  event.angleDelta().y() > 0:
+            self.scale += 0.1
+        else :
+            self.scale -=0.1
+
+        
+
     def mouseMoveEvent(self, ev):
         self.overrideCursor(CURSOR_DRAW)
 

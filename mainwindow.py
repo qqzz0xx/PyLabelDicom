@@ -6,7 +6,8 @@ import utils
 import sys
 from loader import Loader
 from imagedata_wapper import ImageDataWapper
-
+from zoom_widget import ZoomWidget
+from tool_bar import ToolBar
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -35,17 +36,35 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().show()
         self.resize(800, 600)
 
-        open_ = utils.creatAction(self, "Open", self.open)
-        exit_ = utils.creatAction(self, "Exit")
+        open_ = utils.createAction(self, "&Open", self.open, 'open')
+        exit_ = utils.createAction(self, "&Exit")
+        openDir_ = utils.createAction(self, "&Open Dir", self.open, 'open')
+
+        zoom_widget = ZoomWidget()
+        zoom_ = QtWidgets.QWidgetAction(self)
+        zoom_.setDefaultWidget(zoom_widget)
 
         self.actions = utils.struct(
             open=open_,
             fileMenu=(
                 open_,
+                openDir_,
                 None,
                 exit_,
 
             ))
+
+        self.tools_actions = (
+            open_,
+            openDir_,
+            None,
+            zoom_
+
+        )
+        self.toolbar = ToolBar('toolbar')
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.addToolBar(Qt.TopToolBarArea, self.toolbar)
+        utils.addActions(self.toolbar, self.tools_actions)
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
 
@@ -62,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
         print(fileName)
 
-        if fileName:
+        if fileName and fileName != '':
             self.loader = Loader()
             self.loader.loadDicom(fileName)
 

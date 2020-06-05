@@ -1,17 +1,24 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
+import os.path as osp
 
 
-def creatAction(parent, name, slot=None, icon=None):
+pwd = osp.dirname(osp.abspath(__file__))
+
+def createIcon(name):
+    icons_dir = osp.join(pwd, './icons')
+    return QtGui.QIcon(osp.join(':/', icons_dir, '%s.png' % name))
+
+def createAction(parent, name, slot=None, icon=None):
     action = QtWidgets.QAction(name, parent)
     if slot:
         action.triggered.connect(slot)
     if icon:
-        action.setIcon(icon)
+        action.setIcon(createIcon(icon))
 
     return action
 
 
-def addActions(parent: QtWidgets.QMenu, actions):
+def addActions(parent, actions):
     for action in actions:
         if action is None:
             parent.addSeparator()
