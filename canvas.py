@@ -10,18 +10,22 @@ CURSOR_POINT = QtCore.Qt.PointingHandCursor
 CURSOR_DRAW = QtCore.Qt.CrossCursor
 CURSOR_MOVE = QtCore.Qt.ClosedHandCursor
 
+CREATE, EDIT = 0, 1
 
 # clCURSOR_GRAB = QtCore.Qt.OpenHandCursorass
 
 
 class Canvas(QtWidgets.QWidget):
-
+    centerChanged = QtCore.pyqtSignal(QtCore.QPointF)
+    zoomChanged = QtCore.pyqtSignal(float)
     image_wapper = None
-    scale = 1
+    scale = 1.0
     main_win = None
 
+    mode = CREATE
+
     def __init__(self, parent):
-        super(Canvas, self).__init__()
+        super(Canvas, self).__init__(parent)
         self.main_win = parent
         self._curCursor = CURSOR_DEFAULT
         self.shapes = []
@@ -29,20 +33,46 @@ class Canvas(QtWidgets.QWidget):
         self._Painter = QtGui.QPainter()
 
         self.setMouseTracking(True)
+        self.setFocusPolicy(QtCore.Qt.WheelFocus)
 
-    def wheelEvent(self, event : QtGui.QWheelEvent):
-        if  event.angleDelta().y() > 0:
-            self.scale += 0.1
-        else :
-            self.scale -=0.1
+    def setDrawMode(self, draw_mode):
+        Canvas._drawMode = draw_mode
 
-        
+    def setMode(self, mode):
+        Canvas.mode = mode
+
+    def drawing(self):
+        return Canvas.mode == CREATE
+
+    def editing(self):
+        return Canvas.mode == EDIT
+
+    def wheelEvent(self, ev: QtGui.QWheelEvent):
+        if not self.pixmap():
+            return
+        mods = ev.modifiers()
+        delta = ev.angleDelta()
+        if int(mods) != QtCore.Qt.ControlModifier:
+            scale = self.scale
+            if delta.y() > 0:
+                scale *= 1.1
+            else:
+                scale *= 0.9
+
+            self.zoomChanged.emit(scale)
+        else:
+            self.centerChanged.emit(delta)
 
     def mouseMoveEvent(self, ev):
-        self.overrideCursor(CURSOR_DRAW)
+        if not self.pixmap():
+            return
+        pos = self.transformPos(ev.localPos())
 
     def mousePressEvent(self, ev):
+        if not self.pixmap():
+            return
         pos = self.transformPos(ev.localPos())
+        self._curPos = pos
         self.main_win.showStatusTips(
             "world pos: [{0},{1}]".format(pos.x(), pos.y()))
 
@@ -51,7 +81,8 @@ class Canvas(QtWidgets.QWidget):
             if self.cur_shape:
                 self.cur_shape.addPoint(pos)
             else:
-                self.cur_shape = Shape()
+                self.cur_shape = Shape(shape_type=Canvas._drawMode)
+
                 self.cur_shape.fill = True
                 self.cur_shape.addPoint(pos)
             self.repaint()
@@ -59,7 +90,7 @@ class Canvas(QtWidgets.QWidget):
     def paintEvent(self, ev):
         # if not self.shapes:
         #     return super(Canvas, self).paintEvent(ev)
-        if not self.image_wapper:
+        if not self.pixmap():
             return
 
         p = self._Painter
@@ -82,7 +113,9 @@ class Canvas(QtWidgets.QWidget):
         p.end()
 
     def pixmap(self):
-        return self.image_wapper.getQImage()
+        if self.image_wapper:
+            return self.image_wapper.getQImage()
+        return None
 
     def outOfPixmap(self, p):
         w, h = self.pixmap().width(), self.pixmap().height()
@@ -101,6 +134,15 @@ class Canvas(QtWidgets.QWidget):
         y = (ah - h) / (2 * s) if ah > h else 0
         return QtCore.QPoint(x, y)
 
+    def sizeHint(self):
+        return self.minimumSizeHint()
+
+    def minimumSizeHint(self):
+        if self.pixmap():
+            return self.scale * self.pixmap().size()
+
+        return super(Canvas, self).minimumSizeHint()
+
     def leaveEvent(self, ev):
         self.restoreCursor()
 
@@ -111,9 +153,11 @@ class Canvas(QtWidgets.QWidget):
         self.overrideCursor(self._curCursor)
 
     def overrideCursor(self, cursor):
-        QApplication.restoreOverrideCursor()
-        QApplication.setOverrideCursor(cursor)
-        self._curCursor = cursor
+        old_cursor = QApplication.overrideCursor()
+        if old_cursor == None or old_cursor != cursor:
+            QApplication.restoreOverrideCursor()
+            QApplication.setOverrideCursor(cursor)
+            self._curCursor = cursor
 
     @staticmethod
     def restoreCursor():

@@ -1,19 +1,22 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from canvas import Canvas
 import utils
 import sys
+import functools
+
+from canvas import Canvas
 from loader import Loader
 from imagedata_wapper import ImageDataWapper
 from zoom_widget import ZoomWidget
 from tool_bar import ToolBar
 
+
 class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-
+        self.setMouseTracking(True)
         self.loader = None
 
         self.labelListWidget = QtWidgets.QListWidget(self)
@@ -25,24 +28,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.colorTableDock.setWidget(self.colorTableWidget)
 
         self.canvas = Canvas(self)
-        scroll_area = QtWidgets.QScrollArea()
-        scroll_area.setWidget(self.canvas)
-        scroll_area.setWidgetResizable(True)
+        scrollArea = QtWidgets.QScrollArea()
+        scrollArea.setWidget(self.canvas)
+        scrollArea.setWidgetResizable(True)
+
+        self.scrollBars = {
+            Qt.Horizontal: scrollArea.horizontalScrollBar(),
+            Qt.Vertical: scrollArea.verticalScrollBar(),
+        }
 
         self.addDockWidget(Qt.RightDockWidgetArea, self.labelListDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
 
-        self.setCentralWidget(scroll_area)
+        self.setCentralWidget(scrollArea)
         self.statusBar().show()
         self.resize(800, 600)
 
         open_ = utils.createAction(self, "&Open", self.open, 'open')
         exit_ = utils.createAction(self, "&Exit")
         openDir_ = utils.createAction(self, "&Open Dir", self.open, 'open')
+        create_mode_ = utils.createAction(self, "&Create Polygons", self.createPoly, 'open')
 
-        zoom_widget = ZoomWidget()
+        self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
-        zoom_.setDefaultWidget(zoom_widget)
+        zoom_.setDefaultWidget(self.zoom_widget)
 
         self.actions = utils.struct(
             open=open_,
@@ -67,6 +76,33 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.toolbar, self.tools_actions)
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
+        # signal
+
+        self.canvas.zoomChanged.connect(
+            lambda v: self.zoom_widget.setValue(v*100))
+        self.zoom_widget.valueChanged.connect(self.zoomChanged)
+
+        self.canvas.centerChanged.connect(self.centerChanged)
+    
+    
+
+    def centerChanged(self, delta):
+        units = - delta * 0.1
+        bar_x = self.scrollBars[Qt.Horizontal]
+        bar_y = self.scrollBars[Qt.Vertical]
+        print('bar val:{0} bar step:{1} delta:{2}'.format(
+            bar_y.value(), bar_y.singleStep(), delta))
+
+        bar_x.setValue(bar_x.value() + bar_x.singleStep() * units.x())
+        bar_y.setValue(bar_y.value() + bar_y.singleStep() * units.y())
+
+    def zoomChanged(self, scale):
+        self.updateCanvas()
+
+    def updateCanvas(self):
+        self.canvas.scale = self.zoom_widget.value() * 0.01
+        self.canvas.adjustSize()
+        self.canvas.update()
 
     def addMenu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
@@ -89,8 +125,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.canvas.image_wapper = wapper
 
     def resizeEvent(self, event):
-        self.canvas.adjustSize()
-        self.canvas.update()
+        self.updateCanvas()
 
 
 if __name__ == "__main__":
@@ -98,5 +133,9 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
+    win.loader = Loader()
+    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\timg.jpg')
+    wapper = ImageDataWapper(win.loader.getImageData())
+    win.canvas.image_wapper = wapper
 
     app.exec()
