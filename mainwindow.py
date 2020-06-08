@@ -5,6 +5,7 @@ import utils
 import sys
 import functools
 
+import canvas
 from canvas import Canvas
 from loader import Loader
 from imagedata_wapper import ImageDataWapper
@@ -42,12 +43,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(scrollArea)
         self.statusBar().show()
-        self.resize(800, 600)
+        self.resize(1200, 800)
 
-        open_ = utils.createAction(self, "&Open", self.open, 'open')
-        exit_ = utils.createAction(self, "&Exit")
+        open_ = utils.createAction(
+            self, "&Open", self.open, 'open', u'Open image or label file')
+        exit_ = utils.createAction(self, "&Exit", tip=u'Quit Application')
         openDir_ = utils.createAction(self, "&Open Dir", self.open, 'open')
-        create_mode_ = utils.createAction(self, "&Create Polygons", self.createPoly, 'open')
+        create_mode_ = utils.createAction(self, "&Create Polygons", lambda: self.setCreateMode(
+            'polygon'), 'objects', u'Start drawing polygons')
 
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
@@ -67,6 +70,8 @@ class MainWindow(QtWidgets.QMainWindow):
             open_,
             openDir_,
             None,
+            create_mode_,
+            None,
             zoom_
 
         )
@@ -83,8 +88,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
 
         self.canvas.centerChanged.connect(self.centerChanged)
-    
-    
+
+    def setCreateMode(self, mode):
+        if mode:
+            self.canvas.setMode(canvas.CREATE)
+            self.canvas.setCreateMode(mode)
+        else:
+            self.canvas.setMode(canvas.EDIT)
 
     def centerChanged(self, delta):
         units = - delta * 0.1
@@ -134,7 +144,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\timg.jpg')
+    win.loader.loadDicom(r'E:\testData\outputs\1.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 
