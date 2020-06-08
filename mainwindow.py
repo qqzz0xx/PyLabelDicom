@@ -52,12 +52,20 @@ class MainWindow(QtWidgets.QMainWindow):
         create_mode_ = utils.createAction(self, "&Create Polygons", lambda: self.setCreateMode(
             'polygon'), 'objects', u'Start drawing polygons')
 
+        edit_ = utils.createAction(self, '&Edit Label', self.editLabel,
+                                   'edit', 'Modify the label of the selected polygon',
+                                   enabled=False)
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
         zoom_.setDefaultWidget(self.zoom_widget)
 
         self.actions = utils.struct(
             open=open_,
+            exit=exit_,
+            openDir=openDir_,
+            create_mode=create_mode_,
+            edit=edit_,
+
             fileMenu=(
                 open_,
                 openDir_,
@@ -71,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
             openDir_,
             None,
             create_mode_,
+            edit_,
             None,
             zoom_
 
@@ -89,10 +98,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.canvas.centerChanged.connect(self.centerChanged)
 
+    def editLabel(self):
+        self.canvas.setMode(canvas.EDIT)
+        self.actions.edit.setEnabled(False)
+        self.actions.create_mode.setEnabled(True)
+
     def setCreateMode(self, mode):
         if mode:
             self.canvas.setMode(canvas.CREATE)
             self.canvas.setCreateMode(mode)
+            self.actions.edit.setEnabled(True)
+            self.actions.create_mode.setEnabled(False)
         else:
             self.canvas.setMode(canvas.EDIT)
 
@@ -144,7 +160,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'E:\testData\outputs\1.png')
+    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 
