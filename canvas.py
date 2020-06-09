@@ -66,6 +66,8 @@ class Canvas(QtWidgets.QWidget):
 
     def setMode(self, mode):
         Canvas.mode = mode
+        self.unHighlight()
+        self.deSelectShape()
 
     def setCreateMode(self, value):
         if value not in ['polygon', 'rectangle', 'circle',

@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtGui
 import os.path as osp
 import math
 import numpy as np
+import json
 
 pwd = osp.dirname(osp.abspath(__file__))
 
@@ -50,6 +51,14 @@ def distancetoline(point, line):
     if np.dot((p3 - p2), (p1 - p2)) < 0:
         return np.linalg.norm(p3 - p2)
     return np.linalg.norm(np.cross(p2 - p1, p1 - p3)) / np.linalg.norm(p2 - p1)
+
+
+def jsonToQColor(j):
+    return QtGui.QColor(*j)
+
+
+def qcolorToJson(color):
+    return color.getRgb()
 
 
 class struct(object):

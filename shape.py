@@ -11,13 +11,13 @@ from qtpy import QtGui
 # TODO(unknown):
 # - [opt] Store paths instead of creating new ones at each paint.
 
-
-DEFAULT_LINE_COLOR = QtGui.QColor(0, 255, 0, 128)
-DEFAULT_FILL_COLOR = QtGui.QColor(255, 0, 0, 128)
-DEFAULT_SELECT_LINE_COLOR = QtGui.QColor(255, 255, 255)
-DEFAULT_SELECT_FILL_COLOR = QtGui.QColor(0, 128, 255, 155)
-DEFAULT_VERTEX_FILL_COLOR = QtGui.QColor(0, 255, 0, 255)
-DEFAULT_HVERTEX_FILL_COLOR = QtGui.QColor(255, 0, 0)
+R, G, B = SHAPE_COLOR = 0, 255, 0  # green
+DEFAULT_LINE_COLOR = QtGui.QColor(R, G, B, 128)                # bf hovering
+DEFAULT_FILL_COLOR = QtGui.QColor(R, G, B, 128)                # hovering
+DEFAULT_SELECT_LINE_COLOR = QtGui.QColor(255, 255, 255)        # selected
+DEFAULT_SELECT_FILL_COLOR = QtGui.QColor(R, G, B, 155)         # selected
+DEFAULT_VERTEX_FILL_COLOR = QtGui.QColor(R, G, B, 255)         # hovering
+DEFAULT_HVERTEX_FILL_COLOR = QtGui.QColor(255, 255, 255, 255)  # hovering
 
 
 class Shape(object):
@@ -32,7 +32,7 @@ class Shape(object):
     select_line_color = DEFAULT_SELECT_LINE_COLOR
     select_fill_color = DEFAULT_SELECT_FILL_COLOR
     vertex_fill_color = DEFAULT_VERTEX_FILL_COLOR
-    hvertex_fill_color = DEFAULT_SELECT_LINE_COLOR
+    hvertex_fill_color = DEFAULT_HVERTEX_FILL_COLOR
     point_type = P_ROUND
     point_size = 8
     scale = 1.0

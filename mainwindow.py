@@ -4,13 +4,14 @@ from PyQt5.QtCore import Qt
 import utils
 import sys
 import functools
-
+import config
 import canvas
 from canvas import Canvas
 from loader import Loader
 from imagedata_wapper import ImageDataWapper
 from zoom_widget import ZoomWidget
 from tool_bar import ToolBar
+from tag_list_widget import TaglistWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -19,12 +20,14 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__()
         self.setMouseTracking(True)
         self.loader = None
+        self._config = config.get_default_config()
 
         self.labelListWidget = QtWidgets.QListWidget(self)
         self.labelListDock = QtWidgets.QDockWidget('LabelList', self)
         self.labelListDock.setWidget(self.labelListWidget)
 
-        self.colorTableWidget = QtWidgets.QListWidget(self)
+        self.colorTableWidget = TaglistWidget(self)
+        self.colorTableWidget.loadFromJson(self._config['tags'])
         self.colorTableDock = QtWidgets.QDockWidget('ColorTable', self)
         self.colorTableDock.setWidget(self.colorTableWidget)
 

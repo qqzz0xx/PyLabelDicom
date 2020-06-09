@@ -1,0 +1,28 @@
+[
+  {
+    "id": 0,
+    "color": [255, 0, 0, 255],
+    "desc": "label",
+    "childs": [
+      {
+        "id": 1,
+        "color": [255, 0, 0, 255],
+        "desc": "label",
+        "childs": null
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "color": [255, 0, 0, 255],
+    "desc": "label",
+    "childs": [
+      {
+        "id": 3,
+        "color": [255, 0, 0, 255],
+        "desc": "label",
+        "childs": null
+      }
+    ]
+  }
+]
