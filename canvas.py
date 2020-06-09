@@ -58,7 +58,7 @@ class Canvas(QtWidgets.QWidget):
         self.hideBackround = False
 
         self._Painter = QtGui.QPainter()
-        self.lineColor = QtGui.QColor(0, 0, 255)
+        self.lineColor = Shape.line_color
         self.line = Shape(line_color=self.lineColor)
 
         self.setMouseTracking(True)
@@ -134,6 +134,8 @@ class Canvas(QtWidgets.QWidget):
                 # self.overrideCursor(CURSOR_POINT)
                 self._cursor = CURSOR_POINT
                 self.current.highlightVertex(0, Shape.NEAR_VERTEX)
+                self.line.highlightVertex(1, Shape.NEAR_VERTEX)
+
             if self._createMode in ['polygon', 'linestrip']:
                 self.line[0] = self.current[-1]
                 self.line[1] = pos
@@ -152,8 +154,8 @@ class Canvas(QtWidgets.QWidget):
             self.line.line_color = color
             self.repaint()
             self.current.highlightClear()
+            self.line.highlightClear()
             return
-
         # Polygon copy moving.
         if QtCore.Qt.RightButton & ev.buttons():
             if self.selectedShapesCopy and self.prevPoint:
@@ -170,6 +172,7 @@ class Canvas(QtWidgets.QWidget):
         # Polygon/Vertex moving.
         self.movingShape = False
         if QtCore.Qt.LeftButton & ev.buttons():
+
             if self.selectedVertex():
                 self.boundedMoveVertex(pos)
                 self.repaint()
@@ -255,6 +258,7 @@ class Canvas(QtWidgets.QWidget):
                     # Create new shape.
                     self.current = Shape(shape_type=self._createMode)
                     self.current.addPoint(pos)
+                    self.line.line_color = self.current.line_color
                     if self._createMode == 'point':
                         self.finalise()
                     else:
@@ -475,6 +479,7 @@ class Canvas(QtWidgets.QWidget):
                 shape.paint(p)
         if self.current:
             self.current.paint(p)
+            self.line.line_color = self.current.line_color
             self.line.paint(p)
         if self.selectedShapesCopy:
             for s in self.selectedShapesCopy:

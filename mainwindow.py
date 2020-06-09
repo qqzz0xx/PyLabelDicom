@@ -95,8 +95,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.zoomChanged.connect(
             lambda v: self.zoom_widget.setValue(v*100))
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
-
         self.canvas.centerChanged.connect(self.centerChanged)
+        self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
+
+        self.initBarStatus()
+
+    def initBarStatus(self):
+        self.setCreateMode('polygon')
+
+    def shapeSelectionChanged(self, selected_shapes):
+        # self._noSelectionSlot = True
+        # for shape in self.canvas.selectedShapes:
+        #     shape.selected = False
+        # self.labelList.clearSelection()
+        self.canvas.selectedShapes = selected_shapes
+        for shape in self.canvas.selectedShapes:
+            shape.selected = True
+            # item = self.labelList.get_item_from_shape(shape)
+            # item.setSelected(True)
+        # self._noSelectionSlot = False
+        # n_selected = len(selected_shapes)
+        # self.actions.delete.setEnabled(n_selected)
+        # self.actions.copy.setEnabled(n_selected)
+        # self.actions.edit.setEnabled(n_selected == 1)
+        # self.actions.shapeLineColor.setEnabled(n_selected)
+        # self.actions.shapeFillColor.setEnabled(n_selected)
 
     def editLabel(self):
         self.canvas.setMode(canvas.EDIT)

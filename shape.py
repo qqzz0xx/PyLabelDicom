@@ -32,7 +32,7 @@ class Shape(object):
     select_line_color = DEFAULT_SELECT_LINE_COLOR
     select_fill_color = DEFAULT_SELECT_FILL_COLOR
     vertex_fill_color = DEFAULT_VERTEX_FILL_COLOR
-    hvertex_fill_color = DEFAULT_HVERTEX_FILL_COLOR
+    hvertex_fill_color = DEFAULT_SELECT_LINE_COLOR
     point_type = P_ROUND
     point_size = 8
     scale = 1.0
