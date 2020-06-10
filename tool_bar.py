@@ -1,4 +1,5 @@
-from PyQt5 import QtWidgets, Qt, QtCore
+from qtpy import QtWidgets, QtCore
+
 
 class ToolBar(QtWidgets.QToolBar):
     def __init__(self, title):
@@ -7,7 +8,7 @@ class ToolBar(QtWidgets.QToolBar):
 
     def addAction(self, action):
         if isinstance(action, QtWidgets.QWidgetAction):
-            return  super(ToolBar, self).addAction(action)
+            return super(ToolBar, self).addAction(action)
         btn = ToolButton()
         btn.setDefaultAction(action)
         btn.setToolButtonStyle(self.toolButtonStyle())
@@ -15,7 +16,8 @@ class ToolBar(QtWidgets.QToolBar):
 
 
 class ToolButton(QtWidgets.QToolButton):
-    minSize =  (60,60)
+    minSize = (60, 60)
+
     def minimumSizeHint(self):
         ms = super(ToolButton, self).minimumSizeHint()
         w1, h1 = ms.width(), ms.height()

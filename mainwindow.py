@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from qtpy import QtWidgets, QtGui
+from qtpy.QtCore import Qt
 
 import utils
 import sys
@@ -22,6 +22,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__()
         self.setMouseTracking(True)
         self.loader = None
+        self.dirty = False
         self._config = config.get_default_config()
 
         self.labelListWidget = LabelListWidget(self)
@@ -157,6 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
         utils.addActions(self.toolbar, self.tools_actions)
+        utils.addActions(self.canvas.menu, self.actions.editMenu)
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
         self.menu = self.addMenu("&Edit", self.actions.editMenu)
@@ -167,45 +169,67 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
         self.canvas.centerChanged.connect(self.centerChanged)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
-        self.canvas.newShape(self.newShape)
+        self.canvas.newShape.connect(self.newShape)
+        self.labelListWidget.itemChanged.connect(self.labelItemChanged)
 
         self.initBarStatus()
 
     def initBarStatus(self):
         self.toggleDrawMode('polygon')
 
+    def labelItemChanged(self, item):
+        shape = item.shape()
+        self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
+
     def addLabel(self, shape):
-        id, color, desc = shape.label
-        list_item = LabelListWidgetItem(desc, shape)
+        label = shape.label
+
+        list_item = LabelListWidgetItem(label.desc, shape)
         self.labelListWidget.addItem(list_item)
 
-    def newShape(self):
-        curItem = self.colorTableWidget.currentItem()
-        label = self.colorTableWidget.getObjectByItem(curItem)
-        shape = self.canvas.lastShape()
-        shape.label = label
-        addLabel(shape)
+        r, g, b, a = label.color
+        shape.line_color = QtGui.QColor(r, g, b, a)
+        shape.vertex_fill_color = QtGui.QColor(r, g, b, a)
+        shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
+        shape.fill_color = QtGui.QColor(r, g, b, a*0.5)
+        shape.select_line_color = QtGui.QColor(255, 255, 255)
+        shape.select_fill_color = QtGui.QColor(r, g, b, a*0.8)
+
+    def newShape(self, shapes):
+        for shape in shapes:
+            if shape.label == None:
+                curItem = self.colorTableWidget.currentItem()
+                label = self.colorTableWidget.getObjectByItem(curItem)
+                shape = self.canvas.lastShape()
+                shape.label = label
+            self.addLabel(shape)
+
+    def copyShape(self, shape):
+        self.canvas.endMove(copy=True)
+        self.labelListWidget.clearSelection()
+        for shape in self.canvas.selectedShapes:
+            self.addLabel(shape)
+        self.setDirty()
 
     def deleteSelectedShape(self):
         pass
 
     def shapeSelectionChanged(self, selected_shapes):
-        # self._noSelectionSlot = True
-        # for shape in self.canvas.selectedShapes:
-        #     shape.selected = False
-        # self.labelList.clearSelection()
+        self._noSelectionSlot = True
+        for shape in self.canvas.selectedShapes:
+            shape.selected = False
+        self.labelListWidget.clearSelection()
         self.canvas.selectedShapes = selected_shapes
         for shape in self.canvas.selectedShapes:
             shape.selected = True
-            # item = self.labelList.get_item_from_shape(shape)
-            # item.setSelected(True)
-        # self._noSelectionSlot = False
-        # n_selected = len(selected_shapes)
+            item = self.labelListWidget.findItemByShape(shape)
+            self.labelListWidget.selectItem(item)
+            self.labelListWidget.scrollToItem(item)
+        self._noSelectionSlot = False
+        n_selected = len(selected_shapes)
         # self.actions.delete.setEnabled(n_selected)
         # self.actions.copy.setEnabled(n_selected)
-        # self.actions.edit.setEnabled(n_selected == 1)
-        # self.actions.shapeLineColor.setEnabled(n_selected)
-        # self.actions.shapeFillColor.setEnabled(n_selected)
+        self.actions.edit.setEnabled(n_selected == 1)
 
     def editLabel(self):
         self.toggleDrawMode(None)
@@ -266,6 +290,9 @@ class MainWindow(QtWidgets.QMainWindow):
             wapper = ImageDataWapper(self.loader.getImageData())
             self.canvas.image_wapper = wapper
 
+    def setDirty(self):
+        self.dirty = True
+
     def resizeEvent(self, event):
         self.updateCanvas()
 
@@ -276,7 +303,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'E:\testData\outputs\1.png')
+    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 

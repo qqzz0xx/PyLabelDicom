@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui
+from qtpy import QtWidgets, QtGui
 import os.path as osp
 import math
 import numpy as np

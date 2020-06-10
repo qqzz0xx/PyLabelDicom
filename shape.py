@@ -53,6 +53,8 @@ class Shape(object):
             self.MOVE_VERTEX: (1.5, self.P_SQUARE),
         }
 
+        self._vertex_fill_color = Shape.vertex_fill_color
+
         self._closed = False
 
         if line_color is not None:
@@ -164,9 +166,9 @@ class Shape(object):
             size, shape = self._highlightSettings[self._highlightMode]
             d *= size
         if self._highlightIndex is not None:
-            self.vertex_fill_color = self.hvertex_fill_color
+            self._vertex_fill_color = self.hvertex_fill_color
         else:
-            self.vertex_fill_color = Shape.vertex_fill_color
+            self._vertex_fill_color = self.vertex_fill_color
         if shape == self.P_SQUARE:
             path.addRect(point.x() - d / 2, point.y() - d / 2, d, d)
         elif shape == self.P_ROUND:

@@ -6,8 +6,11 @@ from html_delegate import HTMLDelegate
 class LabelListWidgetItem(QtGui.QStandardItem):
     def __init__(self, text=None, shape=None):
         super(LabelListWidgetItem, self).__init__()
-        self.setText(text)
-        self.setShape(shape)
+
+        if text and shape:
+            self.setText(
+                '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(text, *shape.label.color))
+            self.setShape(shape)
 
         self.setCheckable(True)
         self.setCheckState(Qt.Checked)

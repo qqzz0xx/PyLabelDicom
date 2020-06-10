@@ -1,5 +1,7 @@
-from PyQt5 import QtWidgets, Qt
+from qtpy import QtWidgets
+from qtpy.QtCore import Qt
 from html_delegate import HTMLDelegate
+from utils import struct
 
 
 class TaglistWidget(QtWidgets.QListWidget):
@@ -19,7 +21,7 @@ class TaglistWidget(QtWidgets.QListWidget):
 
     def addChild(self, parent, id, color, desc, childs=None):
         item = self.createItem(id, color, desc)
-        obj = (item, (id, color, desc))
+        obj = (item,  struct(id=id, color=color, desc=desc))
         self.tagObjects.append(obj)
         self.addItem(item)
 
@@ -27,7 +29,9 @@ class TaglistWidget(QtWidgets.QListWidget):
         for d in js:
             self.addChild(None, **d)
 
-    def getObjectByItem(item):
+        self.setCurrentRow(0)
+
+    def getObjectByItem(self, item):
         for i, obj in self.tagObjects:
             if item == i:
                 return obj

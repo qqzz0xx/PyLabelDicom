@@ -1,7 +1,7 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QPainterPath, QPainter
-from PyQt5.QtWidgets import QApplication
-from PyQt5 import QtWidgets, QtCore, QtGui
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor, QPainterPath, QPainter
+from qtpy import QtWidgets, QtCore, QtGui
+from qtpy.QtWidgets import QApplication
 
 import utils
 from shape import Shape
@@ -31,16 +31,16 @@ def mouseMoveEventWapper(func):
 
 
 class Canvas(QtWidgets.QWidget):
-    centerChanged = QtCore.pyqtSignal(QtCore.QPointF)
-    zoomChanged = QtCore.pyqtSignal(float)
-    drawingPolygon = QtCore.pyqtSignal(bool)
-    newShape = QtCore.pyqtSignal()
-    edgeSelected = QtCore.pyqtSignal(bool)
-    selectionChanged = QtCore.pyqtSignal(list)
+    centerChanged = QtCore.Signal(QtCore.QPointF)
+    zoomChanged = QtCore.Signal(float)
+    drawingPolygon = QtCore.Signal(bool)
+    newShape = QtCore.Signal(list)
+    edgeSelected = QtCore.Signal(bool)
+    selectionChanged = QtCore.Signal(list)
     image_wapper = None
     scale = 1.0
-
     mode = CREATE
+
     _createMode = 'polygon'
     _fill_drawing = False
 
@@ -54,19 +54,23 @@ class Canvas(QtWidgets.QWidget):
         self.shapes = []
         self.shapesBackups = []
         self.selectedShapes = []
+        self.selectedShapesCopy = []
 
         self.visible = {}
         self.current = None
-        self.selectedShapesCopy = None
         self.hShape = None
         self.hVertex = None
         self.hEdge = None
         self._hideBackround = False
         self.hideBackround = False
+        self.movingShape = False
+        self._fill_drawing = True
 
         self._Painter = QtGui.QPainter()
         self.lineColor = Shape.line_color
         self.line = Shape(line_color=self.lineColor)
+
+        self.menu = QtWidgets.QMenu()
 
         self.setMouseTracking(True)
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
@@ -288,6 +292,34 @@ class Canvas(QtWidgets.QWidget):
             self.prevPoint = pos
             self.repaint()
 
+    def mouseReleaseEvent(self, ev):
+        if ev.button() == QtCore.Qt.RightButton:
+            if len(self.selectedShapesCopy) > 0:
+                self.copySelectedShapes()
+                self.repaint()
+            else:
+                self.menu.exec_(self.mapToGlobal(ev.pos()))
+
+        elif ev.button() == QtCore.Qt.LeftButton and self.selectedShapes:
+            self._cursor = CURSOR_GRAB
+
+        # if self.movingShape and self.hShape:
+        #     index = self.shapes.index(self.hShape)
+        #     if (self.shapesBackups[-1][index].points !=
+        #             self.shapes[index].points):
+        #         self.storeShapes()
+        #         self.shapeMoved.emit()
+
+        #     self.movingShape = False
+
+    def copySelectedShapes(self):
+        if self.selectedShapesCopy:
+            for s in self.selectedShapesCopy:
+                self.shapes.append(s)
+            self.newShape.emit(self.selectedShapesCopy)
+            self.selectionChanged.emit(self.selectedShapesCopy)
+            self.selectedShapesCopy = []
+
     def calculateOffsets(self, shape, point):
         rect = shape.boundingRect()
         x1 = rect.x() - point.x()
@@ -425,7 +457,7 @@ class Canvas(QtWidgets.QWidget):
         self.storeShapes()
         self.current = None
         self.setHiding(False)
-        self.newShape.emit()
+        self.newShape.emit(self.shapes[-1:])
         self.update()
 
     def isShapeRestorable(self):
@@ -452,10 +484,26 @@ class Canvas(QtWidgets.QWidget):
             shape.selected = False
         self.repaint()
 
+    def loadShapes(self, shapes, replace=True):
+        if replace:
+            self.shapes = list(shapes)
+        else:
+            self.shapes.extend(shapes)
+        self.storeShapes()
+        self.current = None
+        self.hShape = None
+        self.hVertex = None
+        self.hEdge = None
+        self.repaint()
+
     def lastShape(self):
         if len(self.shapes) > 0:
             return self.shapes[-1]
         return None
+
+    def setShapeVisible(self, shape, value):
+        self.visible[shape] = value
+        self.repaint()
 
     def setHiding(self, enable=True):
         self._hideBackround = self.hideBackround if enable else False
