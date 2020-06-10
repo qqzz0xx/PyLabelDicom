@@ -14,6 +14,13 @@ CURSOR_GRAB = QtCore.Qt.OpenHandCursor
 
 CREATE, EDIT = 0, 1
 
+Mode_polygon = 'polygon'
+Mode_rectangle = 'rectangle'
+Mode_circle = 'circle'
+Mode_line = 'line'
+Mode_point = 'point'
+Mode_linestrip = 'linestrip'
+
 
 def mouseMoveEventWapper(func):
     def _fun(self, ev):
@@ -444,6 +451,11 @@ class Canvas(QtWidgets.QWidget):
         for shape in self.shapes:
             shape.selected = False
         self.repaint()
+
+    def lastShape(self):
+        if len(self.shapes) > 0:
+            return self.shapes[-1]
+        return None
 
     def setHiding(self, enable=True):
         self._hideBackround = self.hideBackround if enable else False

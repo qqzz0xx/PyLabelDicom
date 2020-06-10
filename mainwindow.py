@@ -6,12 +6,14 @@ import sys
 import functools
 import config
 import canvas
+
 from canvas import Canvas
 from loader import Loader
 from imagedata_wapper import ImageDataWapper
 from zoom_widget import ZoomWidget
 from tool_bar import ToolBar
 from tag_list_widget import TaglistWidget
+from label_list_widget import LabelListWidgetItem, LabelListWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -22,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loader = None
         self._config = config.get_default_config()
 
-        self.labelListWidget = QtWidgets.QListWidget(self)
+        self.labelListWidget = LabelListWidget(self)
         self.labelListDock = QtWidgets.QDockWidget('LabelList', self)
         self.labelListDock.setWidget(self.labelListWidget)
 
@@ -48,16 +50,62 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().show()
         self.resize(1200, 800)
 
-        open_ = utils.createAction(
-            self, "&Open", self.open, 'open', u'Open image or label file')
-        exit_ = utils.createAction(self, "&Exit", tip=u'Quit Application')
-        openDir_ = utils.createAction(self, "&Open Dir", self.open, 'open')
-        create_mode_ = utils.createAction(self, "&Create Polygons", lambda: self.setCreateMode(
-            'polygon'), 'objects', u'Start drawing polygons')
+        action = functools.partial(utils.createAction, self)
+        open_ = action("&Open", self.open, 'open', u'Open image or label file')
+        exit_ = action("&Exit", tip=u'Quit Application')
+        openDir_ = action("&Open Dir", self.open, 'open')
+        create_mode_ = action(
+            "&Create Polygons",
+            lambda: self.toggleDrawMode(canvas.Mode_polygon),
+            'objects',
+            u'Start drawing polygons')
 
-        edit_ = utils.createAction(self, '&Edit Label', self.editLabel,
-                                   'edit', 'Modify the label of the selected polygon',
-                                   enabled=False)
+        createRectangleMode_ = action(
+            self.tr('Create Rectangle'),
+            lambda: self.toggleDrawMode(canvas.Mode_rectangle),
+            'objects',
+            self.tr('Start drawing rectangles'),
+            enabled=False,
+        )
+        createCircleMode_ = action(
+            self.tr('Create Circle'),
+            lambda: self.toggleDrawMode(canvas.Mode_circle),
+            'objects',
+            self.tr('Start drawing circles'),
+            enabled=False,
+        )
+        createLineMode_ = action(
+            self.tr('Create Line'),
+            lambda: self.toggleDrawMode(canvas.Mode_line),
+            'objects',
+            self.tr('Start drawing lines'),
+            enabled=False,
+        )
+        createPointMode_ = action(
+            self.tr('Create Point'),
+            lambda: self.toggleDrawMode(canvas.Mode_point),
+            'objects',
+            self.tr('Start drawing points'),
+            enabled=False,
+        )
+        createLineStripMode_ = action(
+            self.tr('Create LineStrip'),
+            lambda: self.toggleDrawMode(canvas.Mode_linestrip),
+            'objects',
+            self.tr('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
+            enabled=False,
+        )
+
+        delete_ = action(
+            self.tr('Delete Polygons'),
+            self.deleteSelectedShape,
+            'cancel',
+            self.tr('Delete the selected polygons'),
+            enabled=False)
+
+        edit_ = action('&Edit Label', self.editLabel,
+                       'edit', 'Modify the label of the selected polygon',
+                       enabled=False)
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
         zoom_.setDefaultWidget(self.zoom_widget)
@@ -67,13 +115,31 @@ class MainWindow(QtWidgets.QMainWindow):
             exit=exit_,
             openDir=openDir_,
             create_mode=create_mode_,
-            edit=edit_,
+            createRectangleMode=createRectangleMode_,
+            createCircleMode=createCircleMode_,
+            createLineMode=createLineMode_,
+            createPointMode=createPointMode_,
+            createLineStripMode=createLineStripMode_,
 
+            edit=edit_,
             fileMenu=(
                 open_,
                 openDir_,
                 None,
                 exit_,
+
+            ),
+            editMenu=(
+                create_mode_,
+                createRectangleMode_,
+                createCircleMode_,
+                createLineMode_,
+                createPointMode_,
+                createLineStripMode_,
+                None,
+                edit_,
+                None,
+                delete_,
 
             ))
 
@@ -93,18 +159,35 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.toolbar, self.tools_actions)
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
-        # signal
+        self.menu = self.addMenu("&Edit", self.actions.editMenu)
 
+        # signal
         self.canvas.zoomChanged.connect(
             lambda v: self.zoom_widget.setValue(v*100))
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
         self.canvas.centerChanged.connect(self.centerChanged)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
+        self.canvas.newShape(self.newShape)
 
         self.initBarStatus()
 
     def initBarStatus(self):
-        self.setCreateMode('polygon')
+        self.toggleDrawMode('polygon')
+
+    def addLabel(self, shape):
+        id, color, desc = shape.label
+        list_item = LabelListWidgetItem(desc, shape)
+        self.labelListWidget.addItem(list_item)
+
+    def newShape(self):
+        curItem = self.colorTableWidget.currentItem()
+        label = self.colorTableWidget.getObjectByItem(curItem)
+        shape = self.canvas.lastShape()
+        shape.label = label
+        addLabel(shape)
+
+    def deleteSelectedShape(self):
+        pass
 
     def shapeSelectionChanged(self, selected_shapes):
         # self._noSelectionSlot = True
@@ -125,18 +208,25 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.actions.shapeFillColor.setEnabled(n_selected)
 
     def editLabel(self):
-        self.canvas.setMode(canvas.EDIT)
-        self.actions.edit.setEnabled(False)
-        self.actions.create_mode.setEnabled(True)
+        self.toggleDrawMode(None)
 
-    def setCreateMode(self, mode):
+    def toggleDrawMode(self, mode):
         if mode:
             self.canvas.setMode(canvas.CREATE)
             self.canvas.setCreateMode(mode)
-            self.actions.edit.setEnabled(True)
-            self.actions.create_mode.setEnabled(False)
+
         else:
             self.canvas.setMode(canvas.EDIT)
+
+        self.actions.create_mode.setEnabled(mode != canvas.Mode_polygon)
+        self.actions.createRectangleMode.setEnabled(
+            mode != canvas.Mode_rectangle)
+        self.actions.createCircleMode.setEnabled(mode != canvas.Mode_circle)
+        self.actions.createLineMode.setEnabled(mode != canvas.Mode_line)
+        self.actions.createLineStripMode.setEnabled(
+            mode != canvas.Mode_linestrip)
+        self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
+        self.actions.edit.setEnabled(not self.canvas.editing())
 
     def centerChanged(self, delta):
         units = - delta * 0.1
@@ -186,7 +276,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
+    win.loader.loadDicom(r'E:\testData\outputs\1.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 
