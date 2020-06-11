@@ -294,11 +294,14 @@ class Canvas(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
-            if len(self.selectedShapesCopy) > 0:
+            if len(self.selectedShapesCopy) > 0 and len(self.selectedShapes) > 0\
+                    and self.shapeDistanceMean(self.selectedShapes[0], self.selectedShapesCopy[0]) > 4:
                 self.copySelectedShapes()
                 self.repaint()
             else:
                 self.menu.exec_(self.mapToGlobal(ev.pos()))
+
+            self.selectedShapesCopy = []
 
         elif ev.button() == QtCore.Qt.LeftButton and self.selectedShapes:
             self._cursor = CURSOR_GRAB
@@ -311,6 +314,9 @@ class Canvas(QtWidgets.QWidget):
         #         self.shapeMoved.emit()
 
         #     self.movingShape = False
+
+    def shapeDistanceMean(self, shape1, shape2):
+        return utils.distance(shape1[0] - shape2[0])
 
     def copySelectedShapes(self):
         if self.selectedShapesCopy:
@@ -357,6 +363,21 @@ class Canvas(QtWidgets.QWidget):
             self.prevPoint = pos
             return True
         return False
+
+    def deleteSelected(self):
+        del_shapes = []
+        for shape in self.selectedShapes:
+            self.shapes.remove(shape)
+            del_shapes.append(shape)
+        self.storeShapes()
+        self.selectedShapes = []
+        self.update()
+        return del_shapes
+
+    def selectShapes(self, shapes):
+        self.setHiding(True)
+        self.selectionChanged.emit(shapes)
+        self.update()
 
     def deSelectShape(self):
         if self.selectedShapes:

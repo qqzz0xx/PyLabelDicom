@@ -26,12 +26,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._config = config.get_default_config()
 
         self.labelListWidget = LabelListWidget(self)
-        self.labelListDock = QtWidgets.QDockWidget('LabelList', self)
+        self.labelListDock = QtWidgets.QDockWidget('Label List', self)
         self.labelListDock.setWidget(self.labelListWidget)
 
         self.colorTableWidget = TaglistWidget(self)
         self.colorTableWidget.loadFromJson(self._config['tags'])
-        self.colorTableDock = QtWidgets.QDockWidget('ColorTable', self)
+        self.colorTableDock = QtWidgets.QDockWidget('Color Table', self)
         self.colorTableDock.setWidget(self.colorTableWidget)
 
         self.canvas = Canvas(self)
@@ -121,8 +121,8 @@ class MainWindow(QtWidgets.QMainWindow):
             createLineMode=createLineMode_,
             createPointMode=createPointMode_,
             createLineStripMode=createLineStripMode_,
-
             edit=edit_,
+            delete=delete_,
             fileMenu=(
                 open_,
                 openDir_,
@@ -171,15 +171,43 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.newShape.connect(self.newShape)
         self.labelListWidget.itemChanged.connect(self.labelItemChanged)
+        self.labelListWidget.itemDoubleClicked.connect(self.editLabel)
+        self.labelListWidget.itemSelectionChanged.connect(
+            self.labelSelectionChanged)
 
         self.initBarStatus()
 
     def initBarStatus(self):
         self.toggleDrawMode('polygon')
 
+    def labelSelectionChanged(self):
+        if not self._selectSlotBlock:
+            if self.canvas.editing():
+                selected_shapes = []
+                for item in self.labelListWidget.selectedItems():
+                    selected_shapes.append(item.shape())
+                if selected_shapes:
+                    self.canvas.selectShapes(selected_shapes)
+                else:
+                    self.canvas.deSelectShape()
+
     def labelItemChanged(self, item):
         shape = item.shape()
         self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
+
+    def remLabels(self, shapes):
+        for shape in shapes:
+            item = self.labelListWidget.findItemByShape(shape)
+            self.labelListWidget.removeItem(item)
+
+    def editLabel(self, item=None):
+        self.toggleDrawMode(None)
+
+        if not item:
+            return
+
+        if not isinstance(item, LabelListWidgetItem):
+            return
 
     def addLabel(self, shape):
         label = shape.label
@@ -212,27 +240,40 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setDirty()
 
     def deleteSelectedShape(self):
-        pass
+        shapes = self.canvas.selectedShapes
+        if shapes:
+            yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
+            msg = self.tr(
+                'You are about to permanently delete {} polygons, '
+                'proceed anyway?'
+            ).format(len(self.canvas.selectedShapes))
+            if yes == QtWidgets.QMessageBox.warning(
+                    self, self.tr('Attention'), msg,
+                    yes | no, yes):
+                self.remLabels(self.canvas.deleteSelected())
+                self.setDirty()
+                # if self.noShapes():
+                #     for action in self.actions.onShapesPresent:
+                #         action.setEnabled(False)
 
     def shapeSelectionChanged(self, selected_shapes):
-        self._noSelectionSlot = True
+        # self._noSelectionSlot = True
         for shape in self.canvas.selectedShapes:
             shape.selected = False
         self.labelListWidget.clearSelection()
         self.canvas.selectedShapes = selected_shapes
+        self._selectSlotBlock = True
         for shape in self.canvas.selectedShapes:
             shape.selected = True
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.selectItem(item)
             self.labelListWidget.scrollToItem(item)
-        self._noSelectionSlot = False
+        # self._noSelectionSlot = False
+        self._selectSlotBlock = False
         n_selected = len(selected_shapes)
-        # self.actions.delete.setEnabled(n_selected)
+        self.actions.delete.setEnabled(n_selected)
         # self.actions.copy.setEnabled(n_selected)
-        self.actions.edit.setEnabled(n_selected == 1)
-
-    def editLabel(self):
-        self.toggleDrawMode(None)
+        # self.actions.edit.setEnabled(n_selected == 1)
 
     def toggleDrawMode(self, mode):
         if mode:
@@ -303,7 +344,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
+    win.loader.loadDicom(r'e:\testData\5_a.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 

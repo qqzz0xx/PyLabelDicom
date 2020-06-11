@@ -1,6 +1,7 @@
-from PyQt5 import QtWidgets, Qt, QtGui, QtCore
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QStyle
+from qtpy import QtWidgets, QtGui, QtCore
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import QStyle
 
 
 class HTMLDelegate(QtWidgets.QStyledItemDelegate):

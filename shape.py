@@ -152,7 +152,7 @@ class Shape(object):
 
             painter.drawPath(line_path)
             painter.drawPath(vrtx_path)
-            painter.fillPath(vrtx_path, self.vertex_fill_color)
+            painter.fillPath(vrtx_path, self._vertex_fill_color)
             if self.fill:
                 color = self.select_fill_color \
                     if self.selected else self.fill_color
