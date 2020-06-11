@@ -23,6 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMouseTracking(True)
         self.loader = None
         self.dirty = False
+        self._selectSlotBlock = False
         self._config = config.get_default_config()
 
         self.labelListWidget = LabelListWidget(self)
@@ -174,6 +175,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelListWidget.itemDoubleClicked.connect(self.editLabel)
         self.labelListWidget.itemSelectionChanged.connect(
             self.labelSelectionChanged)
+        self.labelListWidget.itemDeleteSelected.connect(
+            self.deleteSelectedShape)
 
         self.initBarStatus()
 
@@ -205,9 +208,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if not item:
             return
-
         if not isinstance(item, LabelListWidgetItem):
             return
+        self.labelSelectionChanged()
 
     def addLabel(self, shape):
         label = shape.label
@@ -344,7 +347,7 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     win.loader = Loader()
-    win.loader.loadDicom(r'e:\testData\5_a.png')
+    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
     wapper = ImageDataWapper(win.loader.getImageData())
     win.canvas.image_wapper = wapper
 

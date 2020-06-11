@@ -38,6 +38,7 @@ class LabelListWidget(QtWidgets.QListView):
     itemDoubleClicked = QtCore.Signal(LabelListWidgetItem)
     itemSelectionChanged = QtCore.Signal(list, list)
     itemDropped = QtCore.Signal()
+    itemDeleteSelected = QtCore.Signal(list)
 
     def __init__(self, parent):
         super(LabelListWidget, self).__init__(parent)
@@ -112,3 +113,8 @@ class LabelListWidget(QtWidgets.QListView):
 
     def clear(self):
         self.model().clear()
+
+    def keyPressEvent(self, ev):
+        if ev.key() & Qt.Key_Delete:
+            items = self.selectedItems()
+            self.itemDeleteSelected.emit(items)

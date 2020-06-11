@@ -33,6 +33,7 @@ def mouseMoveEventWapper(func):
 class Canvas(QtWidgets.QWidget):
     centerChanged = QtCore.Signal(QtCore.QPointF)
     zoomChanged = QtCore.Signal(float)
+    nextFrame = QtCore.Signal(QtCore.QPointF)
     drawingPolygon = QtCore.Signal(bool)
     newShape = QtCore.Signal(list)
     edgeSelected = QtCore.Signal(bool)
@@ -103,7 +104,7 @@ class Canvas(QtWidgets.QWidget):
             return
         mods = ev.modifiers()
         delta = ev.angleDelta()
-        if int(mods) != QtCore.Qt.ControlModifier:
+        if int(mods) == QtCore.Qt.ControlModifier:
             scale = self.scale
             if delta.y() > 0:
                 scale *= 1.1
@@ -112,7 +113,7 @@ class Canvas(QtWidgets.QWidget):
 
             self.zoomChanged.emit(scale)
         else:
-            self.centerChanged.emit(delta)
+            self.nextFrame.emit(delta)
 
     @mouseMoveEventWapper
     def mouseMoveEvent(self, ev):
