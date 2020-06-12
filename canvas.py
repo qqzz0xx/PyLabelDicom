@@ -119,6 +119,9 @@ class Canvas(QtWidgets.QWidget):
     def mouseMoveEvent(self, ev):
         """Update line with last point and current coordinates."""
 
+        if not self.pixmap():
+            return
+
         pos = self.transformPos(ev.localPos())
 
         self.prevMovePoint = pos
