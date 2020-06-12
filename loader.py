@@ -5,7 +5,7 @@ import vtk
 
 
 class Loader:
-    image_data = None
+    image_data = vtk.vtkImageData()
 
     def getImageData(self):
         return self.image_data
@@ -33,7 +33,7 @@ class Loader:
         importer.CopyImportVoidPointer(img_nda, img_nda.nbytes)
         importer.Update()
 
-        self.image_data = importer.GetOutput()
+        self.image_data.DeepCopy(importer.GetOutput())
 
         # if channel == 1:
         #     imageToRgb = vtk.vtkImageMapToColors()
@@ -42,13 +42,6 @@ class Loader:
         #     imageToRgb.SetInputData(self.image_data)
         #     imageToRgb.Update()
         #     self.image_data = imageToRgb.GetOutput()
-
-        # shift = vtk.vtkImageShiftScale()
-        # shift.SetOutputScalarTypeToUnsignedChar()
-        # shift.SetInputData(self.image_data)
-        # shift.Update()
-
-        # self.image_data = shift.GetOutput()
 
         return self.image_data
 

@@ -169,6 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda v: self.zoom_widget.setValue(v*100))
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
         self.canvas.centerChanged.connect(self.centerChanged)
+        self.canvas.nextFrame.connect(self.nextFrame)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.newShape.connect(self.newShape)
         self.labelListWidget.itemChanged.connect(self.labelItemChanged)
@@ -295,6 +296,15 @@ class MainWindow(QtWidgets.QMainWindow):
             mode != canvas.Mode_linestrip)
         self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
         self.actions.edit.setEnabled(not self.canvas.editing())
+
+    def nextFrame(self, delta):
+        curIdx = self.canvas.curFrameIndex()
+        if delta.y() > 0:
+            curIdx += 1
+        else:
+            curIdx -= 1
+        self.canvas.image_wapper.update(curIdx)
+        self.canvas.update()
 
     def centerChanged(self, delta):
         units = - delta * 0.1

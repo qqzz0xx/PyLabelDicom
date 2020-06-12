@@ -99,6 +99,9 @@ class Canvas(QtWidgets.QWidget):
     def setFillDrawing(self, value):
         self._fill_drawing = value
 
+    def curFrameIndex(self):
+        return self.image_wapper.sliceIndex
+
     def wheelEvent(self, ev: QtGui.QWheelEvent):
         if not self.pixmap():
             return

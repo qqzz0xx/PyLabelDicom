@@ -11,7 +11,7 @@ class ImageDataWapper:
     image_data = None
     qimage = None
     sliceType = None
-    sliceIdx = 0
+    sliceIndex = 0
     frameCount = 0
 
     def __init__(self, image_data, slice_type=type.SLICE_Z):
@@ -32,9 +32,8 @@ class ImageDataWapper:
                               (self._extent[4] + self._extent[5]))
 
         self._reslice = vtk.vtkImageReslice()
-        self._reslice.SetInputData(self.image_data)
+        self._reslice.SetOutputDimensionality(2)
         self._resliceMatrix = self.getInitMatrix()
-        self._reslice.SetResliceAxes(self._resliceMatrix)
 
         self.update(self._center[slice_type])
 
@@ -64,6 +63,7 @@ class ImageDataWapper:
         return matrix
 
     def conv2qimg(self, data):
+        print(data)
         dim = data.GetDimensions()
         nda = data.GetPointData().GetScalars()
         nda = nps.vtk_to_numpy(nda)
@@ -75,12 +75,11 @@ class ImageDataWapper:
     def update(self, sliceIdx):
         if not self.image_data:
             return
-        self.sliceIdx = sliceIdx
-        out_data = self.image_data
 
-        if self._dims[2] <= 1 and self.sliceType==type.SLICE_Z:
-            pass     
-        else:     
+        out_data = self.image_data
+        if self._dims[2] <= 1 and self.sliceType == type.SLICE_Z:
+            pass
+        else:
             x, y, z = self._center
             st = self.sliceType
             if st is type.SLICE_X:
@@ -94,8 +93,10 @@ class ImageDataWapper:
             self._resliceMatrix.SetElement(1, 3, y)
             self._resliceMatrix.SetElement(2, 3, z)
             self._reslice.SetResliceAxes(self._resliceMatrix)
+            self._reslice.SetInputData(self.image_data)
             self._reslice.Update()
             out_data = self._reslice.GetOutput()
+            self.sliceIndex = sliceIdx
 
         if self._channel == 1:
             imageToRgb = vtk.vtkImageMapToColors()
@@ -105,11 +106,11 @@ class ImageDataWapper:
             imageToRgb.Update()
             out_data = imageToRgb.GetOutput()
 
-        # shift = vtk.vtkImageShiftScale()
-        # shift.SetOutputScalarTypeToUnsignedChar()
-        # shift.SetInputData(out_data)
-        # shift.Update()
-        # out_data = shift.GetOutput()
+        shift = vtk.vtkImageShiftScale()
+        shift.SetOutputScalarTypeToUnsignedChar()
+        shift.SetInputData(out_data)
+        shift.Update()
+        out_data = shift.GetOutput()
 
         self.conv2qimg(out_data)
 
@@ -120,7 +121,7 @@ class ImageDataWapper:
 if __name__ == "__main__":
 
     loader = Loader()
-    loader.loadDicom(r"F:\github\labeldicom_cpp\testData\5_a.png")
+    d = loader.loadDicom(r"F:\github\labeldicom_cpp\testData\5_a.png")
 
-    wapper = ImageDataWapper(loader.getImageData())
+    wapper = ImageDataWapper(d)
     wapper.getQImage()
