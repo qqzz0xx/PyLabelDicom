@@ -38,5 +38,5 @@ class TaglistWidget(QtWidgets.QListWidget):
         return None
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key_Delete:
             self.clearSelection()

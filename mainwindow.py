@@ -36,16 +36,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.colorTableDock = QtWidgets.QDockWidget('Color Table', self)
         self.colorTableDock.setWidget(self.colorTableWidget)
 
-        self.canvas = Canvas(self)
-        scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setWidget(self.canvas)
-        scrollArea.setWidgetResizable(True)
-        self.scrollArea = scrollArea
-        self.scrollBars = {
-            Qt.Horizontal: scrollArea.horizontalScrollBar(),
-            Qt.Vertical: scrollArea.verticalScrollBar(),
-        }
-
         self.addDockWidget(Qt.RightDockWidgetArea, self.labelListDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
 
@@ -162,19 +152,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
         utils.addActions(self.toolbar, self.tools_actions)
-        utils.addActions(self.canvas.menu, self.actions.editMenu)
+        # utils.addActions(self.canvas.menu, self.actions.editMenu)
+        self.view.addMenu(self.actions.editMenu)
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
         self.menu = self.addMenu("&Edit", self.actions.editMenu)
 
         # signal
-        self.canvas.zoomChanged.connect(
-            lambda v: self.zoom_widget.setValue(v*100))
+        self.view.zoomChanged.connect(
+            lambda canvas, v: self.zoom_widget.setValue(v*100))
+        self.view.centerChanged.connect(
+            lambda canvas, v: self.centerChanged(canvas, v))
+        self.view.nextFrame.connect(
+            lambda canvas, v: self.nextFrame(canvas, v))
+        self.view.selectionChanged.connect(
+            lambda canvas, v: self.shapeSelectionChanged(canvas, v))
+        self.view.newShape.connect(
+            lambda canvas, v: self.newShape(canvas, v))
+        self.view.onMousePress.connect(
+            lambda canvas, v: self.showStatusTips(
+                "world pos: [{0},{1}]".format(v.x(), v.y()))
+        )
+
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
-        self.canvas.centerChanged.connect(self.centerChanged)
-        self.canvas.nextFrame.connect(self.nextFrame)
-        self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
-        self.canvas.newShape.connect(self.newShape)
         self.labelListWidget.itemChanged.connect(self.labelItemChanged)
         self.labelListWidget.itemDoubleClicked.connect(self.editLabel)
         self.labelListWidget.itemSelectionChanged.connect(
@@ -189,21 +189,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def labelSelectionChanged(self):
         if not self._selectSlotBlock:
-            if self.canvas.editing():
+            if self.view.editing():
                 selected_shapes = []
                 for item in self.labelListWidget.selectedItems():
                     selected_shapes.append(item.shape())
                 if selected_shapes:
-                    self.canvas.selectShapes(selected_shapes)
+                    for canvas in self.view:
+                        canvas.selectShapes(selected_shapes)
                 else:
-                    self.canvas.deSelectShape()
+                    for canvas in self.view:
+                        canvas.deSelectShape()
 
     def labelItemChanged(self, item):
         shape = item.shape()
-        self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
+        for canvas in self.view:
+            canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
     def remLabels(self, shapes):
         for shape in shapes:
+            print(shape)
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.removeItem(item)
 
@@ -230,47 +234,54 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.select_line_color = QtGui.QColor(255, 255, 255)
         shape.select_fill_color = QtGui.QColor(r, g, b, a*0.8)
 
-    def newShape(self, shapes):
+    def newShape(self, canvas, shapes):
         for shape in shapes:
             if shape.label == None:
                 curItem = self.colorTableWidget.currentItem()
                 label = self.colorTableWidget.getObjectByItem(curItem)
-                shape = self.canvas.lastShape()
+                shape = canvas.lastShape()
                 shape.label = label
+            print(shape)
             self.addLabel(shape)
 
     def copyShape(self, shape):
-        self.canvas.endMove(copy=True)
+        for canvas in self.view:
+            canvas.endMove(copy=True)
         self.labelListWidget.clearSelection()
-        for shape in self.canvas.selectedShapes:
-            self.addLabel(shape)
+        for canvas in self.view:
+            for shape in canvas.selectedShapes:
+                self.addLabel(shape)
         self.setDirty()
 
     def deleteSelectedShape(self):
-        shapes = self.canvas.selectedShapes
+        shapes = [s for canvas in self.view for s in canvas.selectedShapes]
+
         if shapes:
             yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
             msg = self.tr(
                 'You are about to permanently delete {} polygons, '
                 'proceed anyway?'
-            ).format(len(self.canvas.selectedShapes))
+            ).format(len(shapes))
             if yes == QtWidgets.QMessageBox.warning(
                     self, self.tr('Attention'), msg,
                     yes | no, yes):
-                self.remLabels(self.canvas.deleteSelected())
+
+                del_shapes = [
+                    s for canvas in self.view for s in canvas.deleteSelected()]
+                self.remLabels(del_shapes)
                 self.setDirty()
                 # if self.noShapes():
                 #     for action in self.actions.onShapesPresent:
                 #         action.setEnabled(False)
 
-    def shapeSelectionChanged(self, selected_shapes):
+    def shapeSelectionChanged(self, canvas, selected_shapes):
         # self._noSelectionSlot = True
-        for shape in self.canvas.selectedShapes:
+        for shape in canvas.selectedShapes:
             shape.selected = False
         self.labelListWidget.clearSelection()
-        self.canvas.selectedShapes = selected_shapes
+        canvas.selectedShapes = selected_shapes
         self._selectSlotBlock = True
-        for shape in self.canvas.selectedShapes:
+        for shape in canvas.selectedShapes:
             shape.selected = True
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.selectItem(item)
@@ -283,12 +294,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.actions.edit.setEnabled(n_selected == 1)
 
     def toggleDrawMode(self, mode):
-        if mode:
-            self.canvas.setMode(canvas.CREATE)
-            self.canvas.setCreateMode(mode)
-
-        else:
-            self.canvas.setMode(canvas.EDIT)
+        self.view.toggleDrawMode(mode)
 
         self.actions.create_mode.setEnabled(mode != canvas.Mode_polygon)
         self.actions.createRectangleMode.setEnabled(
@@ -298,34 +304,36 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createLineStripMode.setEnabled(
             mode != canvas.Mode_linestrip)
         self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
-        self.actions.edit.setEnabled(not self.canvas.editing())
+        self.actions.edit.setEnabled(not self.view.editing())
 
-    def nextFrame(self, delta):
-        curIdx = self.canvas.curFrameIndex()
+    def nextFrame(self, canvas, delta):
+        curIdx = canvas.curFrameIndex()
         if delta.y() > 0:
             curIdx += 1
         else:
             curIdx -= 1
-        self.canvas.image_wapper.update(curIdx)
-        self.canvas.update()
+        canvas.image_wapper.update(curIdx)
+        canvas.update()
 
-    def centerChanged(self, delta):
-        units = - delta * 0.1
-        bar_x = self.scrollBars[Qt.Horizontal]
-        bar_y = self.scrollBars[Qt.Vertical]
-        print('bar val:{0} bar step:{1} delta:{2}'.format(
-            bar_y.value(), bar_y.singleStep(), delta))
+    def centerChanged(self, canvas, delta):
+        pass
+        # units = - delta * 0.1
+        # bar_x = self.scrollBars[Qt.Horizontal]
+        # bar_y = self.scrollBars[Qt.Vertical]
+        # print('bar val:{0} bar step:{1} delta:{2}'.format(
+        #     bar_y.value(), bar_y.singleStep(), delta))
 
-        bar_x.setValue(bar_x.value() + bar_x.singleStep() * units.x())
-        bar_y.setValue(bar_y.value() + bar_y.singleStep() * units.y())
+        # bar_x.setValue(bar_x.value() + bar_x.singleStep() * units.x())
+        # bar_y.setValue(bar_y.value() + bar_y.singleStep() * units.y())
 
     def zoomChanged(self, scale):
         self.updateCanvas()
 
     def updateCanvas(self):
-        self.canvas.scale = self.zoom_widget.value() * 0.01
-        self.canvas.adjustSize()
-        self.canvas.update()
+        for canvas in self.view:
+            canvas.scale = self.zoom_widget.value() * 0.01
+            canvas.adjustSize()
+            canvas.update()
 
     def addMenu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
@@ -341,11 +349,12 @@ class MainWindow(QtWidgets.QMainWindow):
         print(fileName)
 
         if fileName and fileName != '':
-            self.loader = Loader()
-            self.loader.loadDicom(fileName)
+            _open(fileName)
 
-            wapper = ImageDataWapper(self.loader.getImageData())
-            self.canvas.image_wapper = wapper
+    def _open(self, fileName):
+        self.loader = Loader()
+        d = self.loader.loadDicom(fileName)
+        self.view.loadImage(d)
 
     def setDirty(self):
         self.dirty = True
@@ -359,9 +368,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win.loader = Loader()
-    win.loader.loadDicom(r'F:\github\labeldicom_cpp\testData\5_a.png')
-    wapper = ImageDataWapper(win.loader.getImageData())
-    win.canvas.image_wapper = wapper
+    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()

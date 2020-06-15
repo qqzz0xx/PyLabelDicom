@@ -34,6 +34,7 @@ class Canvas(QtWidgets.QWidget):
     centerChanged = QtCore.Signal(QtCore.QPointF)
     zoomChanged = QtCore.Signal(float)
     nextFrame = QtCore.Signal(QtCore.QPointF)
+    onMousePress = QtCore.Signal(QtCore.QPointF)
     drawingPolygon = QtCore.Signal(bool)
     newShape = QtCore.Signal(list)
     edgeSelected = QtCore.Signal(bool)
@@ -69,7 +70,7 @@ class Canvas(QtWidgets.QWidget):
 
         self._Painter = QtGui.QPainter()
         self.lineColor = Shape.line_color
-        self.line = Shape(line_color=self.lineColor)
+        self.line = Shape(line_color=self.lineColor, slice_type=None)
 
         self.menu = QtWidgets.QMenu()
 
@@ -253,8 +254,8 @@ class Canvas(QtWidgets.QWidget):
             return
         pos = self.transformPos(ev.localPos())
         self._curPos = pos
-        self.main_win.showStatusTips(
-            "world pos: [{0},{1}]".format(pos.x(), pos.y()))
+
+        self.onMousePress.emit(pos)
 
         if ev.button() == QtCore.Qt.LeftButton:
             if self.drawing():
@@ -276,9 +277,11 @@ class Canvas(QtWidgets.QWidget):
                             self.finalise()
                 elif not self.outOfPixmap(pos):
                     # Create new shape.
-                    self.current = Shape(shape_type=self._createMode)
+                    self.current = Shape(
+                        shape_type=self._createMode, slice_type=self.image_wapper.sliceType)
                     self.current.addPoint(pos)
                     self.line.line_color = self.current.line_color
+                    self.line.slice_type = self.image_wapper.sliceType
                     if self._createMode == 'point':
                         self.finalise()
                     else:
@@ -381,10 +384,20 @@ class Canvas(QtWidgets.QWidget):
         self.update()
         return del_shapes
 
+    def sliceType(self):
+        return self.image_wapper.sliceType
+
     def selectShapes(self, shapes):
-        self.setHiding(True)
-        self.selectionChanged.emit(shapes)
-        self.update()
+        if not self.image_wapper:
+            return
+        t = [s for s in shapes if s.slice_type == self.sliceType()]
+        # for s in shapes:
+        #     if s.slice_type == self.sliceType():
+        #         t.append(s)
+        if t:
+            self.setHiding(True)
+            self.selectionChanged.emit(t)
+            self.update()
 
     def deSelectShape(self):
         if self.selectedShapes:
@@ -530,8 +543,9 @@ class Canvas(QtWidgets.QWidget):
         return None
 
     def setShapeVisible(self, shape, value):
-        self.visible[shape] = value
-        self.repaint()
+        if shape.slice_type == self.sliceType():
+            self.visible[shape] = value
+            self.repaint()
 
     def setHiding(self, enable=True):
         self._hideBackround = self.hideBackround if enable else False

@@ -115,6 +115,6 @@ class LabelListWidget(QtWidgets.QListView):
         self.model().clear()
 
     def keyPressEvent(self, ev):
-        if ev.key() & Qt.Key_Delete:
+        if ev.key() == Qt.Key_Delete:
             items = self.selectedItems()
             self.itemDeleteSelected.emit(items)

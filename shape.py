@@ -37,7 +37,7 @@ class Shape(object):
     point_size = 8
     scale = 1.0
 
-    def __init__(self, label=None, line_color=None, shape_type=None,
+    def __init__(self, slice_type, label=None, line_color=None, shape_type=None,
                  flags=None):
         self.label = label
         self.points = []
@@ -45,6 +45,7 @@ class Shape(object):
         self.selected = False
         self.shape_type = shape_type
         self.flags = flags
+        self.slice_type = slice_type
 
         self._highlightIndex = None
         self._highlightMode = self.NEAR_VERTEX
