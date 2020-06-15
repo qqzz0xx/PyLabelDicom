@@ -33,15 +33,23 @@ class Loader:
         importer.CopyImportVoidPointer(img_nda, img_nda.nbytes)
         importer.Update()
 
-        self.image_data.DeepCopy(importer.GetOutput())
+        output = importer.GetOutput()
 
-        # if channel == 1:
-        #     imageToRgb = vtk.vtkImageMapToColors()
-        #     imageToRgb.SetOutputFormatToRGB()
-        #     imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
-        #     imageToRgb.SetInputData(self.image_data)
-        #     imageToRgb.Update()
-        #     self.image_data = imageToRgb.GetOutput()
+        if channel == 1:
+            imageToRgb = vtk.vtkImageMapToColors()
+            imageToRgb.SetOutputFormatToRGB()
+            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
+            imageToRgb.SetInputData(output)
+            imageToRgb.Update()
+            output = imageToRgb.GetOutput()
+
+        shift = vtk.vtkImageShiftScale()
+        shift.SetOutputScalarTypeToUnsignedChar()
+        shift.SetInputData(output)
+        shift.Update()
+        output = shift.GetOutput()
+
+        self.image_data.DeepCopy(output)
 
         return self.image_data
 

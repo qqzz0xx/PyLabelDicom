@@ -14,6 +14,7 @@ from zoom_widget import ZoomWidget
 from tool_bar import ToolBar
 from tag_list_widget import TaglistWidget
 from label_list_widget import LabelListWidgetItem, LabelListWidget
+from view import DicomView
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         scrollArea = QtWidgets.QScrollArea()
         scrollArea.setWidget(self.canvas)
         scrollArea.setWidgetResizable(True)
-
+        self.scrollArea = scrollArea
         self.scrollBars = {
             Qt.Horizontal: scrollArea.horizontalScrollBar(),
             Qt.Vertical: scrollArea.verticalScrollBar(),
@@ -48,7 +49,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.labelListDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
 
-        self.setCentralWidget(scrollArea)
+        self.view = DicomView()
+
+        self.setCentralWidget(self.view)
         self.statusBar().show()
         self.resize(1200, 800)
 

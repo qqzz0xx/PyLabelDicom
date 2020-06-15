@@ -12,7 +12,7 @@ class ImageDataWapper:
     qimage = None
     sliceType = None
     sliceIndex = 0
-    frameCount = 0
+    maxFrame = 0
 
     def __init__(self, image_data, slice_type=type.SLICE_Z):
         self.image_data = image_data
@@ -21,6 +21,7 @@ class ImageDataWapper:
         self._spacing = self.image_data.GetSpacing()
         self._extent = self.image_data.GetExtent()
         self._dims = self.image_data.GetDimensions()
+        self.maxFrame = self._dims[2] - 1
         self._channel = self.image_data.GetNumberOfScalarComponents()
 
         self._center = [0, 0, 0]
@@ -63,7 +64,6 @@ class ImageDataWapper:
         return matrix
 
     def conv2qimg(self, data):
-        print(data)
         dim = data.GetDimensions()
         nda = data.GetPointData().GetScalars()
         nda = nps.vtk_to_numpy(nda)
@@ -72,8 +72,10 @@ class ImageDataWapper:
         self.qimage = q2nda.array2qimage(nda)
         return self.qimage
 
-    def update(self, sliceIdx):
+    def update(self, idx):
         if not self.image_data:
+            return
+        if idx < 0 or idx > self.maxFrame:
             return
 
         out_data = self.image_data
@@ -83,11 +85,11 @@ class ImageDataWapper:
             x, y, z = self._center
             st = self.sliceType
             if st is type.SLICE_X:
-                x = sliceIdx * self._spacing[0]
+                x = idx * self._spacing[0]
             elif st is type.SLICE_Y:
-                y = sliceIdx * self._spacing[1]
+                y = idx * self._spacing[1]
             elif st is type.SLICE_Z:
-                z = sliceIdx * self._spacing[2]
+                z = idx * self._spacing[2]
 
             self._resliceMatrix.SetElement(0, 3, x)
             self._resliceMatrix.SetElement(1, 3, y)
@@ -96,21 +98,7 @@ class ImageDataWapper:
             self._reslice.SetInputData(self.image_data)
             self._reslice.Update()
             out_data = self._reslice.GetOutput()
-            self.sliceIndex = sliceIdx
-
-        if self._channel == 1:
-            imageToRgb = vtk.vtkImageMapToColors()
-            imageToRgb.SetOutputFormatToRGB()
-            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
-            imageToRgb.SetInputData(out_data)
-            imageToRgb.Update()
-            out_data = imageToRgb.GetOutput()
-
-        shift = vtk.vtkImageShiftScale()
-        shift.SetOutputScalarTypeToUnsignedChar()
-        shift.SetInputData(out_data)
-        shift.Update()
-        out_data = shift.GetOutput()
+            self.sliceIndex = idx
 
         self.conv2qimg(out_data)
 
