@@ -4,6 +4,7 @@ from canvas import CREATE, EDIT
 from imagedata_wapper import ImageDataWapper
 import utils
 from .base_view import BaseView
+from .canvas_3d import Canvas3D
 
 
 class DicomView(BaseView):
@@ -26,6 +27,9 @@ class DicomView(BaseView):
         self.layout().addWidget(self.canvas_list[1][0], 0, 1)
         self.layout().addWidget(self.canvas_list[2][0], 1, 0)
 
+        self.canvas_3d = Canvas3D()
+        self.layout().addWidget(self.canvas_3d, 1, 1)
+
         for _, canvas in self.canvas_list:
             canvas.zoomChanged.connect(
                 lambda v, canvas=canvas: self.zoomChanged.emit(canvas, v))
@@ -45,6 +49,8 @@ class DicomView(BaseView):
             _, canvas = self.canvas_list[i]
             wapper = ImageDataWapper(image_data, i)
             canvas.image_wapper = wapper
+
+        self.canvas_3d.loadImage(image_data)
 
     def addMenu(self, actions):
         for i in range(3):
