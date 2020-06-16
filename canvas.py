@@ -70,7 +70,8 @@ class Canvas(QtWidgets.QWidget):
 
         self._Painter = QtGui.QPainter()
         self.lineColor = Shape.line_color
-        self.line = Shape(line_color=self.lineColor, slice_type=None)
+        self.line = Shape(line_color=self.lineColor,
+                          slice_type=None, slice_index=0)
 
         self.menu = QtWidgets.QMenu()
 
@@ -278,10 +279,13 @@ class Canvas(QtWidgets.QWidget):
                 elif not self.outOfPixmap(pos):
                     # Create new shape.
                     self.current = Shape(
-                        shape_type=self._createMode, slice_type=self.image_wapper.sliceType)
+                        shape_type=self._createMode, slice_type=self.sliceType(),
+                        slice_index=self.sliceIndex())
                     self.current.addPoint(pos)
                     self.line.line_color = self.current.line_color
-                    self.line.slice_type = self.image_wapper.sliceType
+                    self.line.slice_type = self.sliceType()
+                    self.line.slice_index = self.sliceIndex()
+
                     if self._createMode == 'point':
                         self.finalise()
                     else:
@@ -386,6 +390,9 @@ class Canvas(QtWidgets.QWidget):
 
     def sliceType(self):
         return self.image_wapper.sliceType
+
+    def sliceIndex(self):
+        return self.image_wapper.sliceIndex
 
     def selectShapes(self, shapes):
         if not self.image_wapper:

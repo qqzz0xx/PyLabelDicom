@@ -35,21 +35,10 @@ class Loader:
 
         output = importer.GetOutput()
 
-        if channel == 1:
-            imageToRgb = vtk.vtkImageMapToColors()
-            imageToRgb.SetOutputFormatToRGB()
-            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
-            imageToRgb.SetInputData(output)
-            imageToRgb.Update()
-            output = imageToRgb.GetOutput()
-
-        shift = vtk.vtkImageShiftScale()
-        shift.SetOutputScalarTypeToUnsignedChar()
-        shift.SetInputData(output)
-        shift.Update()
-        output = shift.GetOutput()
-
         self.image_data.DeepCopy(output)
+
+        print('load image info:')
+        print(output)
 
         return self.image_data
 

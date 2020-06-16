@@ -95,10 +95,25 @@ class ImageDataWapper:
             self._resliceMatrix.SetElement(1, 3, y)
             self._resliceMatrix.SetElement(2, 3, z)
             self._reslice.SetResliceAxes(self._resliceMatrix)
-            self._reslice.SetInputData(self.image_data)
+            self._reslice.SetInputData(out_data)
             self._reslice.Update()
             out_data = self._reslice.GetOutput()
             self.sliceIndex = idx
+
+        if out_data.GetNumberOfScalarComponents() == 1:
+            imageToRgb = vtk.vtkImageMapToColors()
+            imageToRgb.SetOutputFormatToRGB()
+            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
+            imageToRgb.SetInputData(out_data)
+            imageToRgb.Update()
+            out_data = imageToRgb.GetOutput()
+
+        if out_data.GetScalarType() != vtk.VTK_UNSIGNED_CHAR:
+            shift = vtk.vtkImageShiftScale()
+            shift.SetOutputScalarTypeToUnsignedChar()
+            shift.SetInputData(out_data)
+            shift.Update()
+            out_data = shift.GetOutput()
 
         self.conv2qimg(out_data)
 

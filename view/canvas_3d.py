@@ -45,6 +45,10 @@ class Canvas3D(QVTKRenderWindowInteractor):
         self.render()
 
     def loadImage(self, image_data):
+        r = image_data.GetScalarRange()
+        n = image_data.GetNumberOfScalarComponents()
+        print(r)
+        print(n)
         # Create transfer mapping scalar value to opacity.
         opacityTransferFunction = vtk.vtkPiecewiseFunction()
         opacityTransferFunction.AddPoint(0, 0.0)
@@ -52,8 +56,8 @@ class Canvas3D(QVTKRenderWindowInteractor):
 
         # Create transfer mapping scalar value to color.
         colorTransferFunction = vtk.vtkColorTransferFunction()
-        colorTransferFunction.AddRGBPoint(0.0, 0.0, 0.0, 1.0)
-        colorTransferFunction.AddRGBPoint(40.0, 1.0, 0.0, 0.0)
+        colorTransferFunction.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+        colorTransferFunction.AddRGBPoint(10.0, 0.1, 0.1, 0.1)
         colorTransferFunction.AddRGBPoint(255.0, 1.0, 1.0, 1.0)
 
         # The property describes how the data will look.
@@ -61,7 +65,7 @@ class Canvas3D(QVTKRenderWindowInteractor):
         volumeProperty.SetColor(colorTransferFunction)
         volumeProperty.SetScalarOpacity(opacityTransferFunction)
         volumeProperty.ShadeOn()
-        # volumeProperty.SetInterpolationTypeToLinear()
+        volumeProperty.SetInterpolationTypeToLinear()
 
         # The mapper / ray cast function know how to render the data.
         volumeMapper = vtk.vtkGPUVolumeRayCastMapper()

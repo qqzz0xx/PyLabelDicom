@@ -28,8 +28,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._config = config.get_default_config()
 
         self.labelListWidget = LabelListWidget(self)
-        self.labelListDock = QtWidgets.QDockWidget('Label List', self)
+        self.labelListDock = QtWidgets.QDockWidget(
+            'Displayed Label List', self)
         self.labelListDock.setWidget(self.labelListWidget)
+
+        self.allLabelList = LabelListWidget(self)
+        self.allLabelListDock = QtWidgets.QDockWidget('Label List', self)
+        self.allLabelListDock.setWidget(self.allLabelList)
 
         self.colorTableWidget = TaglistWidget(self)
         self.colorTableWidget.loadFromJson(self._config['tags'])
@@ -38,6 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.addDockWidget(Qt.RightDockWidgetArea, self.labelListDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
+        self.tabifyDockWidget(self.labelListDock, self.allLabelListDock)
 
         self.view = DicomView()
 
@@ -122,7 +128,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 openDir_,
                 None,
                 exit_,
-
             ),
             editMenu=(
                 create_mode_,
@@ -135,8 +140,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 edit_,
                 None,
                 delete_,
-
-            ))
+            ),
+            viewMenu=(
+                self.labelListDock.toggleViewAction(),
+                self.colorTableDock.toggleViewAction(),
+            )
+        )
 
         self.tools_actions = (
             open_,
@@ -157,7 +166,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menu = self.addMenu("&File", self.actions.fileMenu)
         self.menu = self.addMenu("&Edit", self.actions.editMenu)
-
+        self.menu = self.addMenu("&View", self.actions.viewMenu)
         # signal
         self.view.zoomChanged.connect(
             lambda canvas, v: self.zoom_widget.setValue(v*100))
@@ -210,6 +219,8 @@ class MainWindow(QtWidgets.QMainWindow):
             print(shape)
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.removeItem(item)
+            item = self.allLabelList.findItemByShape(shape)
+            self.allLabelList.removeItem(item)
 
     def editLabel(self, item=None):
         self.toggleDrawMode(None)
@@ -221,11 +232,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelSelectionChanged()
 
     def addLabel(self, shape):
+
+        self.labelListWidget.addShape(shape)
+        self.allLabelList.addShape(shape)
+
         label = shape.label
-
-        list_item = LabelListWidgetItem(label.desc, shape)
-        self.labelListWidget.addItem(list_item)
-
         r, g, b, a = label.color
         shape.line_color = QtGui.QColor(r, g, b, a)
         shape.vertex_fill_color = QtGui.QColor(r, g, b, a)
@@ -315,6 +326,18 @@ class MainWindow(QtWidgets.QMainWindow):
         canvas.image_wapper.update(curIdx)
         canvas.update()
 
+        slice_types = [(c.sliceType(), c.sliceIndex()) for c in self.view]
+
+        items = [item for item in self.allLabelList if (
+            item.shape().slice_type, item.shape().slice_index) in slice_types]
+        self.labelListWidget.clear()
+        for c in self.view:
+            d = [i.shape()
+                 for i in items if i.shape().slice_type == c.sliceType()]
+            c.loadShapes(d)
+            for s in d:
+                self.labelListWidget.addShape(s)
+
     def centerChanged(self, canvas, delta):
         pass
         # units = - delta * 0.1
@@ -368,6 +391,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win._open(r"E:\testData\0.nii")
+    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()

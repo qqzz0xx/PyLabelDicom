@@ -32,6 +32,11 @@ class DicomView(BaseView):
         self.canvas_3d = Canvas3D()
         self.layout().addWidget(self.canvas_3d, 1, 1)
 
+        for i in range(self.layout().columnCount()):
+            self.layout().setColumnStretch(i, 1)
+            for j in range(self.layout().rowCount()):
+                self.layout().setRowStretch(j, 1)
+
         for canvas in self.canvas_list:
             canvas.zoomChanged.connect(
                 lambda v, canvas=canvas: self.zoomChanged.emit(canvas, v))

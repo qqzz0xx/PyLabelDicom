@@ -11,14 +11,18 @@ class LabelListWidgetItem(QtGui.QStandardItem):
             self.setText(
                 '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(text, *shape.label.color))
             self.setShape(shape)
+        self._desc = text
 
         self.setCheckable(True)
         self.setCheckState(Qt.Checked)
         self.setEditable(False)
         self.setTextAlignment(Qt.AlignBottom)
 
+    def desc(self):
+        return self._desc
+
     def clone(self):
-        return LabelListWidgetItem(self.text(), self.shape())
+        return LabelListWidgetItem(self.desc(), self.shape())
 
     def setShape(self, shape):
         self.setData(shape, Qt.UserRole)
@@ -96,6 +100,12 @@ class LabelListWidget(QtWidgets.QListView):
             raise TypeError("item must be LabelListWidgetItem")
         self.model().setItem(self.model().rowCount(), 0, item)
         item.setSizeHint(self.itemDelegate().sizeHint(None, None))
+
+    def addShape(self, shape):
+        label = shape.label
+        item = LabelListWidgetItem(label.desc, shape)
+        self.addItem(item)
+        return item
 
     def removeItem(self, item):
         index = self.model().indexFromItem(item)
