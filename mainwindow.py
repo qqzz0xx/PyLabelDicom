@@ -349,7 +349,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print(fileName)
 
         if fileName and fileName != '':
-            _open(fileName)
+            self._open(fileName)
 
     def _open(self, fileName):
         self.loader = Loader()
@@ -368,6 +368,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
+    win._open(r"E:\testData\0.nii")
 
     app.exec()

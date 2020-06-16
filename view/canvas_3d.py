@@ -3,14 +3,14 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 
 
-class Canvas3D(QtWidgets.QWidget):
+class Canvas3D(QVTKRenderWindowInteractor):
     def __init__(self):
         super(Canvas3D, self).__init__()
-        self.setLayout(QtWidgets.QHBoxLayout())
-        self.vtkWidget = QVTKRenderWindowInteractor(self)
+        # self.setLayout(QtWidgets.QHBoxLayout())
+        # self.vtkWidget = QVTKRenderWindowInteractor(self)
         self.ren = vtk.vtkRenderer()
-        self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-        self.layout().addWidget(self.vtkWidget)
+        self.GetRenderWindow().AddRenderer(self.ren)
+        # self.layout().addWidget(self.vtkWidget)
 
     def test_load(self):
         colors = vtk.vtkNamedColors()
@@ -45,7 +45,7 @@ class Canvas3D(QtWidgets.QWidget):
         self.render()
 
     def loadImage(self, image_data):
-                # Create transfer mapping scalar value to opacity.
+        # Create transfer mapping scalar value to opacity.
         opacityTransferFunction = vtk.vtkPiecewiseFunction()
         opacityTransferFunction.AddPoint(0, 0.0)
         opacityTransferFunction.AddPoint(255, 1.0)
@@ -80,4 +80,4 @@ class Canvas3D(QtWidgets.QWidget):
         self.render()
 
     def render(self):
-        self.vtkWidget.GetRenderWindow().Render()
+        self.GetRenderWindow().Render()
