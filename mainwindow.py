@@ -11,6 +11,7 @@ from view import Canvas, BaseView, DicomView, ImageView
 from utils import Loader, Saver, ImageDataWapper
 from widgets import ZoomWidget, ToolBar, TaglistWidget
 from widgets import LabelListWidgetItem, LabelListWidget
+from type import SUPPORT_FORMAT
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -42,7 +43,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabifyDockWidget(self.allLabelListDock, self.labelListDock)
 
         self.view = BaseView()
-
         self.setCentralWidget(self.view)
         self.statusBar().show()
         self.resize(1200, 800)
@@ -403,7 +403,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def open(self):
         if not self.mayContinue():
             return
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
+        dir = None
+        if self.loader:
+            dir = self.loader.image_dir
+
+        formats = "ALL(*);;" + ";;".join(SUPPORT_FORMAT)
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                            "Open File", dir, formats)
         print("open: ", fileName)
 
         if fileName and fileName != '':
