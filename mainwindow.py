@@ -7,7 +7,7 @@ import functools
 import config
 
 from view import canvas
-from view import Canvas, DicomView
+from view import Canvas, DicomView, ImageView
 from utils import Loader, Saver, ImageDataWapper
 from widgets import ZoomWidget, ToolBar, TaglistWidget
 from widgets import LabelListWidgetItem, LabelListWidget
@@ -181,20 +181,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu = self.addMenu("&Edit", self.actions.editMenu)
         self.menu = self.addMenu("&View", self.actions.viewMenu)
         # signal
-        self.view.zoomChanged.connect(
-            lambda canvas, v: self.zoom_widget.setValue(v*100))
-        self.view.centerChanged.connect(
-            lambda canvas, v: self.centerChanged(canvas, v))
-        self.view.nextFrame.connect(
-            lambda canvas, v: self.nextFrame(canvas, v))
-        self.view.selectionChanged.connect(
-            lambda canvas, v: self.shapeSelectionChanged(canvas, v))
-        self.view.newShape.connect(
-            lambda canvas, v: self.newShape(canvas, v))
-        self.view.onMousePress.connect(
-            lambda canvas, v: self.showStatusTips(
-                "world pos: [{0},{1}]".format(v.x(), v.y()))
-        )
 
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
         self.labelListWidget.itemChanged.connect(self.labelItemChanged)
@@ -205,6 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.deleteSelectedShape)
 
         self.init()
+        self.initViewSlot()
 
     def init(self):
         self.toggleDrawMode('polygon')
@@ -220,6 +207,22 @@ class MainWindow(QtWidgets.QMainWindow):
                     action.setShortcuts(key)
                 else:
                     action.setShortcut(key)
+
+    def initViewSlot(self):
+        self.view.zoomChanged.connect(
+            lambda canvas, v: self.zoom_widget.setValue(v*100))
+        self.view.centerChanged.connect(
+            lambda canvas, v: self.centerChanged(canvas, v))
+        self.view.nextFrame.connect(
+            lambda canvas, v: self.nextFrame(canvas, v))
+        self.view.selectionChanged.connect(
+            lambda canvas, v: self.shapeSelectionChanged(canvas, v))
+        self.view.newShape.connect(
+            lambda canvas, v: self.newShape(canvas, v))
+        self.view.onMousePress.connect(
+            lambda canvas, v: self.showStatusTips(
+                "world pos: [{0},{1}]".format(v.x(), v.y()))
+        )
 
     def labelSelectionChanged(self):
         if not self._selectSlotBlock:
@@ -403,11 +406,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self._open(fileName)
 
     def _open(self, fileName):
-        self.loader = Loader()
-        d = self.loader.loadDicom(fileName)
+        loader = Loader()
+        d = loader.loadDicom(fileName)
+
+        # if loader.isImage():
+        #     self.view = ImageView()
+        # elif loader.isVolume():
+        #     self.view = DicomView()
+        # self.initViewSlot()
+        # self.setCentralWidget(self.view)
+        # self.view.addMenu(self.actions.editMenu)
+
         self.view.loadImage(d)
         self.setClean()
         self.actions.saveAs.setEnabled(False)
+        self.loader = loader
 
     def getDirDialog(self):
         dir = None

@@ -10,6 +10,12 @@ class Loader:
     def getImageData(self):
         return self.image_data
 
+    def isVolume(self):
+        return len(self._dims) == 3
+
+    def isImage(self):
+        return len(self._dims) == 2
+
     def loadDicom(self, path):
         if path is None:
             return
@@ -21,6 +27,10 @@ class Loader:
         channel = img_itk.GetNumberOfComponentsPerPixel()
         frame_count = 1 if len(dims) == 2 else dims[2]
         spacing_z = 1 if len(dims) == 2 else spacing[2]
+
+        self._dims = dims
+        self._spacing = spacing
+        self._channel = channel
 
         img_nda = sitk.GetArrayFromImage(img_itk)
         img_nda = img_nda.astype('float32')

@@ -9,8 +9,6 @@ from .canvas_3d import Canvas3D
 
 class DicomView(BaseView):
 
-    canvas_list = []
-
     def __init__(self):
         super(DicomView, self).__init__()
         self.scrollAreas = []
@@ -37,19 +35,7 @@ class DicomView(BaseView):
             for j in range(self.layout().rowCount()):
                 self.layout().setRowStretch(j, 1)
 
-        for canvas in self.canvas_list:
-            canvas.zoomChanged.connect(
-                lambda v, canvas=canvas: self.zoomChanged.emit(canvas, v))
-            canvas.centerChanged.connect(
-                lambda v, canvas=canvas: self.centerChanged.emit(canvas, v))
-            canvas.nextFrame.connect(
-                lambda v, canvas=canvas: self.nextFrame.emit(canvas, v))
-            canvas.selectionChanged.connect(
-                lambda v, canvas=canvas: self.selectionChanged.emit(canvas, v))
-            canvas.newShape.connect(
-                lambda v, canvas=canvas: self.newShape.emit(canvas, v))
-            canvas.onMousePress.connect(
-                lambda v, canvas=canvas: self.onMousePress.emit(canvas, v))
+        self.initSlot()
 
     def loadImage(self, image_data):
         for i in range(3):
@@ -58,33 +44,6 @@ class DicomView(BaseView):
             canvas.image_wapper = wapper
 
         self.canvas_3d.loadImage(image_data)
-
-    def addMenu(self, actions):
-        for i in range(3):
-            canvas = self.canvas_list[i]
-            utils.addActions(canvas.menu, actions)
-
-    def toggleDrawMode(self, mode):
-        for i in range(3):
-            canvas = self.canvas_list[i]
-            if mode:
-                canvas.setMode(CREATE)
-                canvas.setCreateMode(mode)
-            else:
-                canvas.setMode(EDIT)
-
-    def editing(self):
-        return self.canvas_list[0].editing()
-
-    def __len__(self):
-        return len(self.canvas_list)
-
-    def __getitem__(self, i):
-        return self.canvas_list[i]
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
 
         # self.scrollBars = {
         #     Qt.Horizontal: scrollArea.horizontalScrollBar(),

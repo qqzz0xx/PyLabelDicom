@@ -8,7 +8,10 @@ class Canvas3D(QVTKRenderWindowInteractor):
         super(Canvas3D, self).__init__()
         # self.setLayout(QtWidgets.QHBoxLayout())
         # self.vtkWidget = QVTKRenderWindowInteractor(self)
+        colors = vtk.vtkNamedColors()
         self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground(colors.GetColor3d("Tomato"))
+
         self.GetRenderWindow().AddRenderer(self.ren)
         # self.layout().addWidget(self.vtkWidget)
 

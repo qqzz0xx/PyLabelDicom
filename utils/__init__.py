@@ -8,3 +8,4 @@ from .utils import distancetoline
 from .utils import jsonToQColor
 from .utils import qcolorToJson
 from .utils import struct
+from .utils import createIcon
