@@ -13,6 +13,7 @@ class Loader:
     def loadDicom(self, path):
         if path is None:
             return
+        self.image_path = path
 
         img_itk = sitk.ReadImage(path)
         spacing = img_itk.GetSpacing()

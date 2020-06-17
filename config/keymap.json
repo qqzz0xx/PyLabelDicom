@@ -1,0 +1,54 @@
+[
+  {
+    "key": "Ctrl + S",
+    "action": "save"
+  },
+  {
+    "key": "Ctrl + Shift + S",
+    "action": "saveAs"
+  },
+  {
+    "key": "Ctrl + O",
+    "action": "open"
+  },
+  {
+    "key": "Ctrl + Shift + O",
+    "action": "openDir"
+  },
+  {
+    "key": "Ctrl + 1",
+    "action": "createMode"
+  },
+  {
+    "key": "ctrl + 2",
+    "action": "createRectangleMode"
+  },
+  {
+    "key": "ctrl + 3",
+    "action": "createCircleMode"
+  },
+  {
+    "key": "ctrl + 4",
+    "action": "createLineMode"
+  },
+  {
+    "key": "ctrl + 5",
+    "action": "createPointMode"
+  },
+  {
+    "key": "ctrl + 6",
+    "action": "createLineStripMode"
+  },
+  {
+    "key": "Ctrl + `",
+    "action": "edit"
+  },
+  {
+    "key": "A",
+    "action": "prev"
+  },
+  {
+    "key": "D",
+    "action": "next"
+  }
+]

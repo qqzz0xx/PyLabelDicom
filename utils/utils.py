@@ -8,7 +8,7 @@ pwd = osp.dirname(osp.abspath(__file__))
 
 
 def createIcon(name):
-    icons_dir = osp.join(pwd, './icons')
+    icons_dir = osp.join(pwd, '../icons')
     return QtGui.QIcon(osp.join(':/', icons_dir, '%s.png' % name))
 
 

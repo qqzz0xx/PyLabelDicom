@@ -1,5 +1,5 @@
 from qtpy import QtWidgets, QtCore
-from canvas import Canvas
+from .canvas import Canvas
 
 
 class BaseView(QtWidgets.QWidget):

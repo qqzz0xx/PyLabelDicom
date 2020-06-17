@@ -4,7 +4,7 @@ from vtk.util import numpy_support as nps
 import qimage2ndarray as q2nda
 
 import type
-from loader import Loader
+from utils import Loader
 
 
 class ImageDataWapper:

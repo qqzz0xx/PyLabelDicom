@@ -1,8 +1,8 @@
 from qtpy import QtWidgets, QtCore
-from canvas import Canvas
-from canvas import CREATE, EDIT
-from imagedata_wapper import ImageDataWapper
 import utils
+from .canvas import Canvas
+from .canvas import CREATE, EDIT
+from utils import ImageDataWapper
 from .base_view import BaseView
 from .canvas_3d import Canvas3D
 

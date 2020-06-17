@@ -5,16 +5,12 @@ import utils
 import sys
 import functools
 import config
-import canvas
 
-from canvas import Canvas
-from loader import Loader
-from imagedata_wapper import ImageDataWapper
-from zoom_widget import ZoomWidget
-from tool_bar import ToolBar
-from tag_list_widget import TaglistWidget
-from label_list_widget import LabelListWidgetItem, LabelListWidget
-from view import DicomView
+from view import canvas
+from view import Canvas, DicomView
+from utils import Loader, Saver, ImageDataWapper
+from widgets import ZoomWidget, ToolBar, TaglistWidget
+from widgets import LabelListWidgetItem, LabelListWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -55,7 +51,7 @@ class MainWindow(QtWidgets.QMainWindow):
         open_ = action("&Open", self.open, 'open', u'Open image or label file')
         exit_ = action("&Exit", tip=u'Quit Application')
         openDir_ = action("&Open Dir", self.open, 'open')
-        create_mode_ = action(
+        createMode_ = action(
             "&Create Polygons",
             lambda: self.toggleDrawMode(canvas.Mode_polygon),
             'objects',
@@ -107,6 +103,15 @@ class MainWindow(QtWidgets.QMainWindow):
         edit_ = action('&Edit Label', self.editLabel,
                        'edit', 'Modify the label of the selected polygon',
                        enabled=False)
+
+        save_ = action(self.tr('&Save'),
+                       self.saveFile, 'save',
+                       self.tr('Save labels to file'), enabled=False)
+
+        saveAs_ = action(self.tr('&Save As'),
+                         self.saveFileAs,
+                         'save-as', self.tr('Save labels to a different file'),
+                         enabled=False)
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
         zoom_.setDefaultWidget(self.zoom_widget)
@@ -115,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
             open=open_,
             exit=exit_,
             openDir=openDir_,
-            create_mode=create_mode_,
+            createMode=createMode_,
             createRectangleMode=createRectangleMode_,
             createCircleMode=createCircleMode_,
             createLineMode=createLineMode_,
@@ -123,14 +128,20 @@ class MainWindow(QtWidgets.QMainWindow):
             createLineStripMode=createLineStripMode_,
             edit=edit_,
             delete=delete_,
+            save=save_,
+            saveAs=saveAs_,
+
             fileMenu=(
                 open_,
                 openDir_,
                 None,
+                save_,
+                saveAs_,
+                None,
                 exit_,
             ),
             editMenu=(
-                create_mode_,
+                createMode_,
                 createRectangleMode_,
                 createCircleMode_,
                 createLineMode_,
@@ -150,8 +161,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tools_actions = (
             open_,
             openDir_,
+            save_,
+            saveAs_,
             None,
-            create_mode_,
+            createMode_,
             edit_,
             None,
             zoom_
@@ -191,10 +204,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelListWidget.itemDeleteSelected.connect(
             self.deleteSelectedShape)
 
-        self.initBarStatus()
+        self.init()
 
-    def initBarStatus(self):
+    def init(self):
         self.toggleDrawMode('polygon')
+
+        keymaps = self._config['keymap']
+        for km in keymaps:
+            key = km['key']
+            action = km['action']
+            if hasattr(self.actions, action):
+                key = key.replace(' ', '')
+                action = self.actions.__dict__[action]
+                if isinstance(key, (list, tuple)):
+                    action.setShortcuts(key)
+                else:
+                    action.setShortcut(key)
 
     def labelSelectionChanged(self):
         if not self._selectSlotBlock:
@@ -216,7 +241,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def remLabels(self, shapes):
         for shape in shapes:
-            print(shape)
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.removeItem(item)
             item = self.allLabelList.findItemByShape(shape)
@@ -246,14 +270,18 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.select_fill_color = QtGui.QColor(r, g, b, a*0.8)
 
     def newShape(self, canvas, shapes):
+        if not shapes:
+            return
+
         for shape in shapes:
             if shape.label == None:
                 curItem = self.colorTableWidget.currentItem()
                 label = self.colorTableWidget.getObjectByItem(curItem)
                 shape = canvas.lastShape()
                 shape.label = label
-            print(shape)
+            print("new shape: ", shape)
             self.addLabel(shape)
+        self.setDirty()
 
     def copyShape(self, shape):
         for canvas in self.view:
@@ -307,7 +335,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def toggleDrawMode(self, mode):
         self.view.toggleDrawMode(mode)
 
-        self.actions.create_mode.setEnabled(mode != canvas.Mode_polygon)
+        self.actions.createMode.setEnabled(mode != canvas.Mode_polygon)
         self.actions.createRectangleMode.setEnabled(
             mode != canvas.Mode_rectangle)
         self.actions.createCircleMode.setEnabled(mode != canvas.Mode_circle)
@@ -369,7 +397,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open(self):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
-        print(fileName)
+        print("open: ", fileName)
 
         if fileName and fileName != '':
             self._open(fileName)
@@ -378,9 +406,52 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loader = Loader()
         d = self.loader.loadDicom(fileName)
         self.view.loadImage(d)
+        self.setClean()
+        self.actions.saveAs.setEnabled(False)
+
+    def getDirDialog(self):
+        dir = None
+        if hasattr(self, 'output_dir') and self.output_dir:
+            dir = self.output_dir
+
+        dir_name = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Find Directory ..", dir)
+        return dir_name
+
+    def saveFile(self):
+        if hasattr(self, 'saver') and self.saver:
+            self.saveLabels(self.saver.saveDirName)
+        else:
+            self.saveLabels(self.getDirDialog())
+
+    def saveFileAs(self):
+        self.saveLabels(self.getDirDialog())
+
+    def saveLabels(self, dirname):
+        if not dirname:
+            return
+        saver = Saver()
+        shapes = [item.shape() for item in self.allLabelList]
+        saver.saveLabels(dirname, shapes, self.loader.image_path)
+
+        self.saver = saver
+        self.setClean()
 
     def setDirty(self):
+        print("setDirty")
         self.dirty = True
+        self.actions.save.setEnabled(True)
+        self.actions.saveAs.setEnabled(True)
+
+    def setClean(self):
+        self.dirty = False
+        self.actions.save.setEnabled(False)
+        self.actions.createMode.setEnabled(True)
+        self.actions.createRectangleMode.setEnabled(True)
+        self.actions.createCircleMode.setEnabled(True)
+        self.actions.createLineMode.setEnabled(True)
+        self.actions.createPointMode.setEnabled(True)
+        self.actions.createLineStripMode.setEnabled(True)
 
     def resizeEvent(self, event):
         self.updateCanvas()
@@ -391,6 +462,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
+    win._open(r"e:\testData\0.nii")
 
     app.exec()

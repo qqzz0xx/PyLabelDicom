@@ -1,6 +1,6 @@
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
-from html_delegate import HTMLDelegate
+from .html_delegate import HTMLDelegate
 
 
 class LabelListWidgetItem(QtGui.QStandardItem):
@@ -9,7 +9,7 @@ class LabelListWidgetItem(QtGui.QStandardItem):
 
         if text and shape:
             self.setText(
-                '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(text, *shape.label.color))
+                '{} <font color="#{:02x}{:02x}{:02x}">◝</font>'.format(text, *shape.label.color))
             self.setShape(shape)
         self._desc = text
 

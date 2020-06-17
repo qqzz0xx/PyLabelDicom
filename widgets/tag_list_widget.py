@@ -1,6 +1,6 @@
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
-from html_delegate import HTMLDelegate
+from .html_delegate import HTMLDelegate
 from utils import struct
 
 
