@@ -1,6 +1,7 @@
 import SimpleITK as sitk
 from vtk.util import numpy_support as nps
 
+import os.path as osp
 import vtk
 
 
@@ -20,6 +21,7 @@ class Loader:
         if path is None:
             return
         self.image_path = path
+        self.image_dir = osp.dirname(osp.abspath(path))
 
         img_itk = sitk.ReadImage(path)
         spacing = img_itk.GetSpacing()
@@ -48,8 +50,8 @@ class Loader:
 
         self.image_data.DeepCopy(output)
 
-        print('load image info:')
-        print(output)
+        # print('load image info:')
+        # print(output)
 
         return self.image_data
 

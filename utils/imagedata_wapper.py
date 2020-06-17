@@ -68,7 +68,6 @@ class ImageDataWapper:
         nda = data.GetPointData().GetScalars()
         nda = nps.vtk_to_numpy(nda)
         nda = nda.reshape((dim[1], dim[0], 3), order='C')
-
         self.qimage = q2nda.array2qimage(nda)
         return self.qimage
 
@@ -115,7 +114,9 @@ class ImageDataWapper:
             shift.Update()
             out_data = shift.GetOutput()
 
-        self.conv2qimg(out_data)
+        out_data = self.conv2qimg(out_data)
+
+        return out_data
 
     def getQImage(self):
         return self.qimage

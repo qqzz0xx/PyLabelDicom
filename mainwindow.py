@@ -7,7 +7,7 @@ import functools
 import config
 
 from view import canvas
-from view import Canvas, DicomView, ImageView
+from view import Canvas, BaseView, DicomView, ImageView
 from utils import Loader, Saver, ImageDataWapper
 from widgets import ZoomWidget, ToolBar, TaglistWidget
 from widgets import LabelListWidgetItem, LabelListWidget
@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
         self.tabifyDockWidget(self.labelListDock, self.allLabelListDock)
 
-        self.view = DicomView()
+        self.view = BaseView()
 
         self.setCentralWidget(self.view)
         self.statusBar().show()
@@ -154,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             viewMenu=(
                 self.labelListDock.toggleViewAction(),
+                self.allLabelList.toggleViewAction(),
                 self.colorTableDock.toggleViewAction(),
             )
         )
@@ -354,11 +355,12 @@ class MainWindow(QtWidgets.QMainWindow):
             curIdx += 1
         else:
             curIdx -= 1
-        canvas.image_wapper.update(curIdx)
+        output = canvas.image_wapper.update(curIdx)
+        if not output:
+            return
+
         canvas.update()
-
         slice_types = [(c.sliceType(), c.sliceIndex()) for c in self.view]
-
         items = [item for item in self.allLabelList if (
             item.shape().slice_type, item.shape().slice_index) in slice_types]
         self.labelListWidget.clear()
@@ -399,6 +401,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(tips, 3000)
 
     def open(self):
+        if not self.mayContinue():
+            return
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self)
         print("open: ", fileName)
 
@@ -406,21 +410,41 @@ class MainWindow(QtWidgets.QMainWindow):
             self._open(fileName)
 
     def _open(self, fileName):
+
+        self.clearLabels()
         loader = Loader()
         d = loader.loadDicom(fileName)
 
-        # if loader.isImage():
-        #     self.view = ImageView()
-        # elif loader.isVolume():
-        #     self.view = DicomView()
-        # self.initViewSlot()
-        # self.setCentralWidget(self.view)
-        # self.view.addMenu(self.actions.editMenu)
+        if loader.isImage():
+            self.view = ImageView()
+        elif loader.isVolume():
+            self.view = DicomView()
+        self.initViewSlot()
+        self.setCentralWidget(self.view)
+        self.view.addMenu(self.actions.editMenu)
 
         self.view.loadImage(d)
-        self.setClean()
         self.actions.saveAs.setEnabled(False)
         self.loader = loader
+
+    def mayContinue(self):
+        if not self.dirty:
+            return True
+        mb = QtWidgets.QMessageBox
+        msg = self.tr('Save annotations to "{}" before closing?').format(
+            self.loader.image_path)
+        answer = mb.question(self,
+                             self.tr('Save annotations?'),
+                             msg,
+                             mb.Save | mb.Discard | mb.Cancel,
+                             mb.Save)
+        if answer == mb.Discard:
+            return True
+        elif answer == mb.Save:
+            self.saveLabels(self.loader.image_dir)
+            return True
+        else:  # answer == mb.Cancel
+            return False
 
     def getDirDialog(self):
         dir = None
@@ -466,6 +490,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createPointMode.setEnabled(True)
         self.actions.createLineStripMode.setEnabled(True)
 
+    def clearLabels(self):
+        self.allLabelList.clear()
+        self.labelListWidget.clear()
+        self.setClean()
+
     def resizeEvent(self, event):
         self.updateCanvas()
 
@@ -475,6 +504,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win._open(r"e:\testData\0.nii")
+    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()

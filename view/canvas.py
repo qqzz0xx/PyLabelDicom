@@ -50,7 +50,6 @@ class Canvas(QtWidgets.QWidget):
         super(Canvas, self).__init__(parent)
 
         self.epsilon = 10.0
-        self.main_win = parent
         self._curCursor = CURSOR_DEFAULT
         self._cursor = CURSOR_DEFAULT
         self.shapes = []

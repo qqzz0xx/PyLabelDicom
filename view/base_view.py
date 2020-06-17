@@ -13,9 +13,14 @@ class BaseView(QtWidgets.QWidget):
     selectionChanged = QtCore.Signal(Canvas, list)
     onMousePress = QtCore.Signal(Canvas, QtCore.QPointF)
 
-    canvas_list = []
+    def __init__(self):
+        super(BaseView, self).__init__()
+        self.canvas_list = []
+        print("BaseView:", self)
+        print("canvas_list:", self.canvas_list)
 
     def initSlot(self):
+
         for canvas in self.canvas_list:
             canvas.zoomChanged.connect(
                 lambda v, canvas=canvas: self.zoomChanged.emit(canvas, v))
@@ -34,13 +39,11 @@ class BaseView(QtWidgets.QWidget):
         pass
 
     def addMenu(self, actions):
-        for i in range(3):
-            canvas = self.canvas_list[i]
+        for _, canvas in enumerate(self.canvas_list):
             utils.addActions(canvas.menu, actions)
 
     def toggleDrawMode(self, mode):
-        for i in range(3):
-            canvas = self.canvas_list[i]
+        for _, canvas in enumerate(self.canvas_list):
             if mode:
                 canvas.setMode(CREATE)
                 canvas.setCreateMode(mode)
@@ -48,7 +51,9 @@ class BaseView(QtWidgets.QWidget):
                 canvas.setMode(EDIT)
 
     def editing(self):
-        return self.canvas_list[0].editing()
+        if self.canvas_list:
+            return self.canvas_list[0].editing()
+        return False
 
     def __len__(self):
         return len(self.canvas_list)

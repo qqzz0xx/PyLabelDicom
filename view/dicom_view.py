@@ -11,8 +11,11 @@ class DicomView(BaseView):
 
     def __init__(self):
         super(DicomView, self).__init__()
+
         self.scrollAreas = []
+        m = (0, 0, 0, 0)
         self.setLayout(QtWidgets.QGridLayout())
+        self.layout().setContentsMargins(*m)
 
         for i in range(3):
             canvas = Canvas(self)
