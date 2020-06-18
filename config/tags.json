@@ -2,12 +2,12 @@
   {
     "id": 0,
     "color": [255, 0, 0, 255],
-    "desc": "label",
+    "desc": "label0",
     "childs": [
       {
         "id": 1,
         "color": [255, 0, 0, 255],
-        "desc": "label",
+        "desc": "label1",
         "childs": null
       }
     ]
@@ -15,14 +15,18 @@
   {
     "id": 2,
     "color": [255, 0, 0, 255],
-    "desc": "label",
-    "childs": [
-      {
-        "id": 3,
-        "color": [255, 0, 0, 255],
-        "desc": "label",
-        "childs": null
-      }
-    ]
+    "desc": "label2",
+    "childs": null
+  },
+  {
+    "id": 3,
+    "color": [255, 0, 0, 255],
+    "desc": "label3"
+  },
+
+  {
+    "id": 4,
+    "color": [255, 0, 0, 255],
+    "desc": "label4"
   }
 ]

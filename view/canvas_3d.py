@@ -15,38 +15,6 @@ class Canvas3D(QVTKRenderWindowInteractor):
         self.GetRenderWindow().AddRenderer(self.ren)
         # self.layout().addWidget(self.vtkWidget)
 
-    def test_load(self):
-        colors = vtk.vtkNamedColors()
-        # Set the background color.
-        bkg = map(lambda x: x / 255.0, [26, 51, 102, 255])
-        colors.SetColor("BkgColor", *bkg)
-
-        # This creates a polygonal cylinder model with eight circumferential
-        # facets.
-        cylinder = vtk.vtkCylinderSource()
-        cylinder.SetResolution(8)
-
-        # The mapper is responsible for pushing the geometry into the graphics
-        # library. It may also do color mapping, if scalars or other
-        # attributes are defined.
-        cylinderMapper = vtk.vtkPolyDataMapper()
-        cylinderMapper.SetInputConnection(cylinder.GetOutputPort())
-
-        # The actor is a grouping mechanism: besides the geometry (mapper), it
-        # also has a property, transformation matrix, and/or texture map.
-        # Here we set its color and rotate it -22.5 degrees.
-        cylinderActor = vtk.vtkActor()
-        cylinderActor.SetMapper(cylinderMapper)
-        cylinderActor.GetProperty().SetColor(colors.GetColor3d("Tomato"))
-        cylinderActor.RotateX(30.0)
-        cylinderActor.RotateY(-45.0)
-
-        # Add the actors to the renderer, set the background and size
-        self.ren.AddActor(cylinderActor)
-        self.ren.SetBackground(colors.GetColor3d("BkgColor"))
-        self.ren.ResetCameraClippingRange()
-        self.render()
-
     def loadImage(self, image_data):
         r = image_data.GetScalarRange()
         n = image_data.GetNumberOfScalarComponents()

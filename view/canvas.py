@@ -77,6 +77,12 @@ class Canvas(QtWidgets.QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
 
+        self._label = QtWidgets.QLabel("", self)
+        self._label.setStyleSheet("color: #45804b")
+        self._label.move(10, 10)
+
+        self._focus_delta = QtCore.QPoint(0, 0)
+
     def setMode(self, mode):
         Canvas.mode = mode
         self.unHighlight()
@@ -206,6 +212,11 @@ class Canvas(QtWidgets.QWidget):
                 self.movingShape = True
             return
 
+        if QtCore.Qt.MidButton & ev.buttons():
+            mv = pos - self.prevPoint
+            self._focus_delta += mv
+            print('move: ', mv)
+            self.update()
         # Just hovering over the canvas, 2 posibilities:
         # - Highlight shapes
         # - Highlight vertex
@@ -304,6 +315,8 @@ class Canvas(QtWidgets.QWidget):
             self.selectShapePoint(pos, multiple_selection_mode=group_mode)
             self.prevPoint = pos
             self.repaint()
+        elif ev.button() == QtCore.Qt.MidButton:
+            self.prevPoint = pos
 
     def mouseReleaseEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
@@ -605,6 +618,9 @@ class Canvas(QtWidgets.QWidget):
 
         p.end()
 
+        self._label.setText(str(self.sliceIndex()))
+        self._label.adjustSize()
+
     def pixmap(self):
         if self.image_wapper:
             return self.image_wapper.getQImage()
@@ -631,7 +647,7 @@ class Canvas(QtWidgets.QWidget):
         aw, ah = area.width(), area.height()
         x = (aw - w) / (2 * s) if aw > w else 0
         y = (ah - h) / (2 * s) if ah > h else 0
-        return QtCore.QPoint(x, y)
+        return QtCore.QPoint(x, y) + self._focus_delta
 
     def sizeHint(self):
         return self.minimumSizeHint()

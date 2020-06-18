@@ -37,9 +37,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.colorTableDock = QtWidgets.QDockWidget('Color Table', self)
         self.colorTableDock.setWidget(self.colorTableWidget)
 
-        self.addDockWidget(Qt.RightDockWidgetArea, self.labelListDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.allLabelListDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorTableDock)
-        self.tabifyDockWidget(self.labelListDock, self.allLabelListDock)
+        self.tabifyDockWidget(self.allLabelListDock, self.labelListDock)
 
         self.view = BaseView()
 
@@ -154,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             viewMenu=(
                 self.labelListDock.toggleViewAction(),
-                self.allLabelList.toggleViewAction(),
+                self.allLabelListDock.toggleViewAction(),
                 self.colorTableDock.toggleViewAction(),
             )
         )

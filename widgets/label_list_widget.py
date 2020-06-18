@@ -71,8 +71,26 @@ class LabelListWidget(QtWidgets.QListView):
         for i in range(len(self)):
             yield self[i]
 
+    def dragEnterEvent(self, event):
+        super(LabelListWidget, self).dragEnterEvent(event)
+        self._dragIndex = self.currentIndex()
+
     def dropEvent(self, event):
-        super(LabelListWidget, self).dropEvent(event)
+        # super(LabelListWidget, self).dropEvent(event)
+        targetIndex = self.indexAt(event.pos())
+
+        if not self._dragIndex or not targetIndex:
+            return
+
+        item = self.model().itemFromIndex(self._dragIndex).clone()
+        # target = self.model().itemFromIndex(self._dragIndex)
+        self.model().removeRow(self._dragIndex.row())
+        self.model().insertRow(targetIndex.row(), item)
+
+        print('from', self._dragIndex.row())
+        print('to', targetIndex.row())
+
+        self._dragIndex = None
         self.itemDropped.emit()
 
     @property
