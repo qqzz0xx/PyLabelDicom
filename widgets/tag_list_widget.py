@@ -5,10 +5,10 @@ from utils import struct
 
 
 class TaglistWidget(QtWidgets.QListWidget):
-    tagObjects = []
 
     def __init__(self, parent):
         super(TaglistWidget, self).__init__(parent)
+        self.tagObjects = []
         self.setItemDelegate(HTMLDelegate())
 
     def createItem(self, id, color, desc):
@@ -26,6 +26,9 @@ class TaglistWidget(QtWidgets.QListWidget):
         self.addItem(item)
 
     def loadFromJson(self, js):
+        self.clear()
+        self.tagObjects = []
+
         for d in js:
             self.addChild(None, **d)
 

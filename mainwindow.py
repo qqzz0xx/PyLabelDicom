@@ -221,7 +221,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view.newShape.connect(
             lambda canvas, v: self.newShape(canvas, v))
         self.view.onMousePress.connect(
-            lambda canvas, v: self.showStatusTips(
+            lambda canvas, v: self.status(
                 "world pos: [{0},{1}]".format(v.x(), v.y()))
         )
 
@@ -397,7 +397,7 @@ class MainWindow(QtWidgets.QMainWindow):
             utils.addActions(menu, actions)
         return menu
 
-    def showStatusTips(self, tips, dt=3000):
+    def status(self, tips, dt=3000):
         self.statusBar().showMessage(tips, 3000)
 
     def open(self):

@@ -138,6 +138,12 @@ class Canvas(QtWidgets.QWidget):
         # self.restoreCursor()
         self._cursor = CURSOR_DEFAULT
 
+        if QtCore.Qt.MidButton & ev.buttons():
+            mv = pos - self.prevPoint
+            self._focus_delta += mv
+            self.update()
+            return
+
         # Polygon drawing.
         if self.drawing():
             self.line.shape_type = self._createMode
@@ -212,11 +218,6 @@ class Canvas(QtWidgets.QWidget):
                 self.movingShape = True
             return
 
-        if QtCore.Qt.MidButton & ev.buttons():
-            mv = pos - self.prevPoint
-            self._focus_delta += mv
-            print('move: ', mv)
-            self.update()
         # Just hovering over the canvas, 2 posibilities:
         # - Highlight shapes
         # - Highlight vertex
@@ -340,6 +341,15 @@ class Canvas(QtWidgets.QWidget):
         #         self.shapeMoved.emit()
 
         #     self.movingShape = False
+
+    def keyPressEvent(self, ev):
+        key = ev.key()
+        if key == QtCore.Qt.Key_Escape and self.current:
+            self.current = None
+            self.drawingPolygon.emit(False)
+            self.update()
+        elif key == QtCore.Qt.Key_Return and self.canCloseShape():
+            self.finalise()
 
     def shapeDistanceMean(self, shape1, shape2):
         return utils.distance(shape1[0] - shape2[0])

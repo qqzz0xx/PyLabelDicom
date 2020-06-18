@@ -23,6 +23,7 @@ def createAction(parent, name, slot=None, icon=None, tip=None, enabled=True):
         action.setIcon(createIcon(icon))
     if tip:
         action.setToolTip(tip)
+        action.setStatusTip(tip)
 
     return action
 
