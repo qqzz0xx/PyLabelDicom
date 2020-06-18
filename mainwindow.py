@@ -425,6 +425,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.view = ImageView()
         elif loader.isVolume():
             self.view = DicomView()
+        elif loader.isVideo():
+            self.view = ImageView()
+
         self.initViewSlot()
         self.setCentralWidget(self.view)
         self.view.addMenu(self.actions.editMenu)

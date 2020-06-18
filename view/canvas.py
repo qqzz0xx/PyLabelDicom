@@ -20,6 +20,7 @@ Mode_circle = 'circle'
 Mode_line = 'line'
 Mode_point = 'point'
 Mode_linestrip = 'linestrip'
+Mode_tag = 'tag'
 
 
 def mouseMoveEventWapper(func):
@@ -80,6 +81,10 @@ class Canvas(QtWidgets.QWidget):
         self._label = QtWidgets.QLabel("", self)
         self._label.setStyleSheet("color: #45804b")
         self._label.move(10, 10)
+
+        self._tag_label = QtWidgets.QLabel("", self)
+        self._tag_label.setStyleSheet("color: #FF0000")
+        self._tag_label.move(10, 40)
 
         self._focus_delta = QtCore.QPoint(0, 0)
 
@@ -350,6 +355,11 @@ class Canvas(QtWidgets.QWidget):
             self.update()
         elif key == QtCore.Qt.Key_Return and self.canCloseShape():
             self.finalise()
+        elif key == QtCore.Qt.Key_Space:
+            self.current = Shape(
+                shape_type=Mode_tag, slice_type=self.sliceType(),
+                slice_index=self.sliceIndex())
+            self.finalise()
 
     def shapeDistanceMean(self, shape1, shape2):
         return utils.distance(shape1[0] - shape2[0])
@@ -592,7 +602,7 @@ class Canvas(QtWidgets.QWidget):
         #     return super(Canvas, self).paintEvent(ev)
         if not self.pixmap():
             return
-
+        tag_strs = []
         p = self._Painter
         p.begin(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -608,8 +618,11 @@ class Canvas(QtWidgets.QWidget):
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and \
                     self.isVisible(shape):
-                shape.fill = shape.selected or shape == self.hShape
-                shape.paint(p)
+                if shape.shape_type != Mode_tag:
+                    shape.fill = shape.selected or shape == self.hShape
+                    shape.paint(p)
+                else:
+                    tag_strs.append(shape.label.desc)
         if self.current:
             self.current.paint(p)
             self.line.line_color = self.current.line_color
@@ -630,6 +643,9 @@ class Canvas(QtWidgets.QWidget):
 
         self._label.setText(str(self.sliceIndex()))
         self._label.adjustSize()
+
+        self._tag_label.setText(' | '.join(tag_strs))
+        self._tag_label.adjustSize()
 
     def pixmap(self):
         if self.image_wapper:

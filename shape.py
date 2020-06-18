@@ -76,7 +76,7 @@ class Shape(object):
         if value is None:
             value = 'polygon'
         if value not in ['polygon', 'rectangle', 'point',
-                         'line', 'circle', 'linestrip']:
+                         'line', 'circle', 'linestrip', 'tag']:
             raise ValueError('Unexpected shape_type: {}'.format(value))
         self._shape_type = value
 
@@ -200,6 +200,8 @@ class Shape(object):
         return post_i
 
     def containsPoint(self, point):
+        if self.shape_type == 'tag':
+            return False
         return self.makePath().contains(point)
 
     def getCircleRectFromLine(self, line):
@@ -249,7 +251,10 @@ class Shape(object):
         return copy.deepcopy(self)
 
     def __len__(self):
-        return len(self.points)
+        if self.shape_type != 'tag':
+            return len(self.points)
+        else:
+            return 1
 
     def __getitem__(self, key):
         return self.points[key]
