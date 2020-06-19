@@ -15,7 +15,7 @@ class Saver:
             flags=s.flags,
             slice_type=s.slice_type,
             slice_index=s.slice_index,
-            _closed=s._closed
+            _closed=s._closed,
 
         )
         return data

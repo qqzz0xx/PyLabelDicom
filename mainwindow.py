@@ -625,7 +625,10 @@ class MainWindow(QtWidgets.QMainWindow):
             file = urls[0].toLocalFile()
             if not str.endswith(file, '.json'):
                 file = osp.splitext(file)[0] + '.json'
-                self.open(file)
+                try:
+                    self.open(file)
+                except:
+                    self.status(self.tr('Load json failed!'))
 
 
 if __name__ == "__main__":
@@ -633,6 +636,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
+    # win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()

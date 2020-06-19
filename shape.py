@@ -43,7 +43,6 @@ class Shape(object):
         self.points = []
         self.fill = False
         self.selected = False
-        self.shape_type = shape_type
         self.flags = flags
         self.slice_type = slice_type
         self.slice_index = slice_index
@@ -67,18 +66,18 @@ class Shape(object):
 
         self.shape_type = shape_type
 
-    @property
-    def shape_type(self):
-        return self._shape_type
+    # @property
+    # def shape_type(self):
+    #     return self._shape_type
 
-    @shape_type.setter
-    def shape_type(self, value):
-        if value is None:
-            value = 'polygon'
-        if value not in ['polygon', 'rectangle', 'point',
-                         'line', 'circle', 'linestrip', 'tag']:
-            raise ValueError('Unexpected shape_type: {}'.format(value))
-        self._shape_type = value
+    # @shape_type.setter
+    # def shape_type(self, value):
+    #     if value is None:
+    #         value = 'polygon'
+    #     if value not in ['polygon', 'rectangle', 'point',
+    #                      'line', 'circle', 'linestrip', 'tag']:
+    #         raise ValueError('Unexpected shape_type: {}'.format(value))
+    #     self._shape_type = value
 
     def close(self):
         self._closed = True

@@ -585,7 +585,7 @@ class Canvas(QtWidgets.QWidget):
         return None
 
     def setShapeVisible(self, shape, value):
-        if shape.slice_type == self.sliceType():
+        if shape and shape.slice_type == self.sliceType():
             self.visible[shape] = value
             self.repaint()
 
