@@ -23,6 +23,9 @@ class DicomView(BaseView):
             scrollArea = QtWidgets.QScrollArea(self)
             scrollArea.setWidget(canvas)
             scrollArea.setWidgetResizable(True)
+            scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            scrollArea.setHorizontalScrollBarPolicy(
+                QtCore.Qt.ScrollBarAlwaysOff)
             self.scrollAreas.append(scrollArea)
             self.canvas_list.append(canvas)
 
@@ -44,6 +47,7 @@ class DicomView(BaseView):
         for i in range(3):
             canvas = self.canvas_list[i]
             wapper = ImageDataWapper(image_data, i)
+            wapper.updateToCenter()
             canvas.image_wapper = wapper
 
         self.canvas_3d.loadImage(image_data)

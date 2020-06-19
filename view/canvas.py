@@ -356,10 +356,13 @@ class Canvas(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key_Return and self.canCloseShape():
             self.finalise()
         elif key == QtCore.Qt.Key_Space:
-            self.current = Shape(
-                shape_type=Mode_tag, slice_type=self.sliceType(),
-                slice_index=self.sliceIndex())
-            self.finalise()
+            self.newTagLabel()
+
+    def newTagLabel(self):
+        self.current = Shape(
+            shape_type=Mode_tag, slice_type=self.sliceType(),
+            slice_index=self.sliceIndex())
+        self.finalise()
 
     def shapeDistanceMean(self, shape1, shape2):
         return utils.distance(shape1[0] - shape2[0])

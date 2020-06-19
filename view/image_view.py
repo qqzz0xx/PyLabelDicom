@@ -1,4 +1,4 @@
-from qtpy import QtWidgets
+from qtpy import QtWidgets, QtCore
 from qtpy.QtWidgets import QSizePolicy
 from .base_view import BaseView
 from .canvas import Canvas
@@ -17,6 +17,8 @@ class ImageView(BaseView):
         scrollArea = QtWidgets.QScrollArea(self)
         scrollArea.setWidget(canvas)
         scrollArea.setWidgetResizable(True)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.layout().addWidget(scrollArea)
 
         self.canvas_list.append(canvas)
@@ -27,4 +29,5 @@ class ImageView(BaseView):
 
         canvas = self[0]
         wapper = ImageDataWapper(image_data, 2)
+        wapper.update(0)
         canvas.image_wapper = wapper

@@ -50,5 +50,21 @@
   {
     "key": "D",
     "action": "next"
+  },
+  {
+    "key": "Tab",
+    "action": "nextTag"
+  },
+  {
+    "key": "Shift + Tab",
+    "action": "prevTag"
+  },
+  {
+    "key": "Q",
+    "action": "homeTag"
+  },
+  {
+    "key": "W",
+    "action": "endTag"
   }
 ]

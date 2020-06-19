@@ -1,6 +1,7 @@
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
 from .html_delegate import HTMLDelegate
+from utils import addActions
 
 
 class LabelListWidgetItem(QtGui.QStandardItem):
@@ -60,6 +61,8 @@ class LabelListWidget(QtWidgets.QListView):
         self.selectionModel().selectionChanged.connect(
             self.itemSelectionChangedEvent
         )
+
+        self.menu = QtWidgets.QMenu()
 
     def __len__(self):
         return self.model().rowCount()
@@ -141,6 +144,15 @@ class LabelListWidget(QtWidgets.QListView):
 
     def clear(self):
         self.model().clear()
+
+    def addMenu(self, menu):
+        addActions(self.menu, menu)
+
+    def mousePressEvent(self, ev):
+        super(LabelListWidget, self).mousePressEvent(ev)
+        if ev.button() == Qt.RightButton:
+            if self.menu:
+                self.menu.exec_(self.mapToGlobal(ev.pos()))
 
     def keyPressEvent(self, ev):
         if ev.key() == Qt.Key_Delete:

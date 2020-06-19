@@ -1,5 +1,6 @@
 import json
 import os.path as osp
+from shape import Shape
 
 
 class Saver:
@@ -13,7 +14,8 @@ class Saver:
             shape_type=s.shape_type,
             flags=s.flags,
             slice_type=s.slice_type,
-            slice_index=s.slice_index
+            slice_index=s.slice_index,
+            _closed=s._closed
 
         )
         return data
@@ -33,3 +35,15 @@ class Saver:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         saveDirName = dirname
+
+    def loadLabels(self, path):
+        with open(path) as f:
+            j = json.load(f)
+
+        shapes = []
+        for d in j['shapes']:
+            s = Shape(None, None)
+            s.__dict__.update(d)
+            shapes.append(s)
+
+        return shapes

@@ -36,7 +36,10 @@ class ImageDataWapper:
         self._reslice.SetOutputDimensionality(2)
         self._resliceMatrix = self.getInitMatrix()
 
-        self.update(self._center[slice_type])
+    def updateToCenter(self):
+        if not self.image_data:
+            return
+        self.update(self._center[self.sliceType])
 
     def getInitMatrix(self):
         slice_type = self.sliceType

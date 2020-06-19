@@ -17,7 +17,7 @@ def get_tags_config():
     config = None
     tag_config_file = osp.join(here, 'tags.json')
     with open(tag_config_file) as f:
-        config = json.load(f)
+        config = json.load(f, strict=False)
 
     return config
 
@@ -26,6 +26,6 @@ def get_keymap_config():
     config = None
     tag_config_file = osp.join(here, 'keymap.json')
     with open(tag_config_file) as f:
-        config = json.load(f)
+        config = json.load(f, strict=False)
 
     return config

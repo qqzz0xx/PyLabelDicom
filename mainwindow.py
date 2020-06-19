@@ -1,24 +1,28 @@
-from qtpy import QtWidgets, QtGui
+from qtpy import QtWidgets, QtGui, QtCore
 from qtpy.QtCore import Qt
 
-import utils
 import sys
 import functools
-import config
+import json
+import os.path as osp
 
+import utils
+import config
 from view import canvas
-from view import Canvas, BaseView, DicomView, ImageView
+from view import Canvas, BaseView, DicomView, ImageView, VideoView
 from utils import Loader, Saver, ImageDataWapper
 from widgets import ZoomWidget, ToolBar, TaglistWidget
 from widgets import LabelListWidgetItem, LabelListWidget
 from type import SUPPORT_FORMAT
+from shape import Shape
 
 
 class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.setMouseTracking(True)
+        self.setAcceptDrops(True)
+
         self.loader = None
         self.dirty = False
         self._selectSlotBlock = False
@@ -112,6 +116,31 @@ class MainWindow(QtWidgets.QMainWindow):
                          self.saveFileAs,
                          'save-as', self.tr('Save labels to a different file'),
                          enabled=False)
+
+        nextTag_ = action(self.tr('&Next Tag'),
+                          slot=lambda: self.colorTableWidget.selectNext(),
+                          tip=self.tr('Go to a next tag'),
+                          )
+        prevTag_ = action(self.tr('&Previous Tag'),
+                          slot=lambda: self.colorTableWidget.selectPrev(),
+                          tip=self.tr('Go to a previous tag'),
+                          )
+        homeTag_ = action(self.tr('&Home Tag'),
+                          slot=lambda: self.colorTableWidget.selectHome(),
+                          tip=self.tr('Go to a start tag'),
+                          )
+        endTag_ = action(self.tr('&End Tag'),
+                         slot=lambda: self.colorTableWidget.selectEnd(),
+                         tip=self.tr('Go to a end tag'),
+                         )
+        deleteTag_ = action(self.tr('&Delete Tag'),
+                            slot=lambda: self.colorTableWidget.deleteSelected(),
+                            )
+        # load_ = action(self.tr('&Import'),
+        #                slot=self.loadJson,
+        #                icon='copy',
+        #                tip=self.tr('import tags or labels'))
+
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
         zoom_.setDefaultWidget(self.zoom_widget)
@@ -130,6 +159,12 @@ class MainWindow(QtWidgets.QMainWindow):
             delete=delete_,
             save=save_,
             saveAs=saveAs_,
+            nextTag=nextTag_,
+            prevTag=prevTag_,
+            homeTag=homeTag_,
+            endTag=endTag_,
+            deleteTag=deleteTag_,
+            # load=load_,
 
             fileMenu=(
                 open_,
@@ -137,6 +172,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 save_,
                 saveAs_,
+                None,
+                # load_,
                 None,
                 exit_,
             ),
@@ -152,10 +189,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 delete_,
             ),
+            selectionMenu=(
+                nextTag_,
+                prevTag_,
+                homeTag_,
+                endTag_,
+            ),
             viewMenu=(
                 self.labelListDock.toggleViewAction(),
                 self.allLabelListDock.toggleViewAction(),
                 self.colorTableDock.toggleViewAction(),
+            ),
+            labelListMenu=(
+                delete_,
+            ),
+            tagListMenu=(
+                deleteTag_,
             )
         )
 
@@ -177,10 +226,13 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.toolbar, self.tools_actions)
         # utils.addActions(self.canvas.menu, self.actions.editMenu)
         self.view.addMenu(self.actions.editMenu)
+        self.labelListWidget.addMenu(self.actions.labelListMenu)
+        self.colorTableWidget.addMenu(self.actions.tagListMenu)
 
-        self.menu = self.addMenu("&File", self.actions.fileMenu)
-        self.menu = self.addMenu("&Edit", self.actions.editMenu)
-        self.menu = self.addMenu("&View", self.actions.viewMenu)
+        self.addMenu("&File", self.actions.fileMenu)
+        self.addMenu("&Edit", self.actions.editMenu)
+        self.addMenu("&Selection", self.actions.selectionMenu)
+        self.addMenu("&View", self.actions.viewMenu)
         # signal
 
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
@@ -190,6 +242,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.labelSelectionChanged)
         self.labelListWidget.itemDeleteSelected.connect(
             self.deleteSelectedShape)
+        self.colorTableWidget.itemsDelete.connect(self.tagsDelete)
 
         self.init()
         self.initViewSlot()
@@ -224,6 +277,44 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda canvas, v: self.status(
                 "world pos: [{0},{1}]".format(v.x(), v.y()))
         )
+
+    def loadJson(self, file):
+        if file:
+            with open(file, encoding='UTF-8') as f:
+                j = json.load(f, strict=False)
+            if str.endswith(file, 'tags.json'):
+                self.colorTableWidget.loadFromJson(j)
+                self._config['tags'] = j
+            else:
+                shapes = []
+                for d in j['shapes']:
+                    s = Shape(None, None)
+                    s.__dict__.update(d)
+                    s.label = utils.struct(**s.label)
+                    s.points = [QtCore.QPointF(x, y) for x, y in s.points]
+                    shapes.append(s)
+                [self.addLabel(s) for s in shapes]
+            self._json_file = file
+
+    def tagsDelete(self, tags):
+        tag_ids = [tag.id for tag in tags]
+        del_shapes = [
+            shape for canvas in self.view for shape in canvas.shapes if shape.label.id in tag_ids]
+        for canvas in self.view:
+            canvas.selectShapes(del_shapes)
+
+        if del_shapes:
+            yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
+            msg = self.tr(
+                'You are about to permanently delete {} polygons, '
+                'proceed anyway?'
+            ).format(len(del_shapes))
+            if yes == QtWidgets.QMessageBox.warning(
+                    self, self.tr('Attention'), msg,
+                    yes | no, yes):
+                [canvas.deleteSelected() for canvas in self.view]
+                self.remLabels(del_shapes)
+                self.setDirty()
 
     def labelSelectionChanged(self):
         if not self._selectSlotBlock:
@@ -400,20 +491,27 @@ class MainWindow(QtWidgets.QMainWindow):
     def status(self, tips, dt=3000):
         self.statusBar().showMessage(tips, 3000)
 
-    def open(self):
+    def open(self, fileName=None):
         if not self.mayContinue():
             return
-        dir = None
-        if self.loader:
-            dir = self.loader.image_dir
 
-        formats = "ALL(*);;" + ";;".join(SUPPORT_FORMAT)
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                            "Open File", dir, formats)
+        if not fileName:
+            if self.loader:
+                dir = self.loader.image_dir
+            formats = "ALL(*);;" + ";;".join(SUPPORT_FORMAT)
+            fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                                "Open File", dir, formats)
         print("open: ", fileName)
+        if not osp.exists(fileName):
+            return
 
         if fileName and fileName != '':
-            self._open(fileName)
+            if osp.splitext(fileName)[-1] == '.json':
+                self.loadJson(fileName)
+            else:
+                self._open(fileName)
+
+        self.status(self.tr('{} open success!'.format(fileName)))
 
     def _open(self, fileName):
 
@@ -426,7 +524,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif loader.isVolume():
             self.view = DicomView()
         elif loader.isVideo():
-            self.view = ImageView()
+            self.view = VideoView()
 
         self.initViewSlot()
         self.setCentralWidget(self.view)
@@ -506,6 +604,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event):
         self.updateCanvas()
+
+    def keyPressEvent(self, event):
+        if key == QtCore.Qt.Key_Space:
+            if self.view:
+                self.view[-1].newTagLabel()
+
+    def dragEnterEvent(self, ev):
+        if ev.mimeData().hasUrls():
+            ev.setDropAction(Qt.LinkAction)
+            ev.accept()
+
+    def dropEvent(self, ev):
+        urls = ev.mimeData().urls()
+        for url in urls:
+            file = url.toLocalFile()
+            self.open(file)
+
+        if len(urls) == 1:
+            file = urls[0].toLocalFile()
+            if not str.endswith(file, '.json'):
+                file = osp.splitext(file)[0] + '.json'
+                self.open(file)
 
 
 if __name__ == "__main__":

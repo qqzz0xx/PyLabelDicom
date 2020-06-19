@@ -4,7 +4,7 @@ import numpy as np
 import os.path as osp
 import vtk
 import skvideo.io as skio
-import skvideo.datasets as skd
+import time
 
 
 class Loader:
@@ -24,13 +24,15 @@ class Loader:
 
     def numpy_array_as_vtk_image_data(self, source_numpy_array):
         if len(source_numpy_array.shape) > 2:
-            channel_count = source_numpy_array.shape[2]
+            frame_count = source_numpy_array.shape[0]
         else:
-            channel_count = 1
+            frame_count = 1
+
+        channel_count = source_numpy_array.shape[-1]
 
         output_vtk_image = vtk.vtkImageData()
         output_vtk_image.SetDimensions(
-            source_numpy_array.shape[1], source_numpy_array.shape[0], channel_count)
+            source_numpy_array.shape[2], source_numpy_array.shape[1], frame_count)
 
         vtk_type_by_numpy_type = {
             np.uint8: vtk.VTK_UNSIGNED_CHAR,
@@ -46,12 +48,12 @@ class Loader:
         }
         vtk_datatype = vtk_type_by_numpy_type[source_numpy_array.dtype.type]
 
-        source_numpy_array = np.flipud(source_numpy_array)
+        # source_numpy_array = np.flipud(source_numpy_array)
 
         # Note: don't flip (take out next two lines) if input is RGB.
         # Likewise, BGRA->RGBA would require a different reordering here.
-        if channel_count > 1:
-            source_numpy_array = np.flip(source_numpy_array, 2)
+        # if channel_count > 1:
+        #     source_numpy_array = np.flip(source_numpy_array, 2)
 
         depth_array = nps.numpy_to_vtk(
             source_numpy_array.ravel(), deep=True, array_type=vtk_datatype)
@@ -66,14 +68,13 @@ class Loader:
     def loadDicom(self, path):
         if path is None:
             return
+        start_time = time.time()
         self.image_path = path
         self.image_dir = osp.dirname(osp.abspath(path))
         self.image_suffix = osp.splitext(path)[1]
 
-        output = None
-
         if str.lower(self.image_suffix) in ['.mp4', '.avi', '.flv', '.wmv']:
-            img_nda = skio.vread(skd.bigbuckbunny())
+            img_nda = skio.vread(path)
             img_nda = img_nda.astype('float32')
             self.image_type = 'video'
             self._channel = img_nda.shape[3]
@@ -92,7 +93,7 @@ class Loader:
             self._dims = (dims[0], dims[1], frame_count)
             self._spacing = (spacing[0], spacing[1], spacing_z)
             self._channel = channel
-            self.image_type = 'image' if (len(self._dims) == 2) else 'volume'
+            self.image_type = 'image' if frame_count == 1 else 'volume'
 
             img_nda = sitk.GetArrayFromImage(img_itk)
             img_nda = img_nda.astype('float32')
@@ -113,6 +114,7 @@ class Loader:
         print(output)
         self.image_data.DeepCopy(output)
 
+        print("---laod dicom:  %s seconds ---" % (time.time() - start_time))
         # print('load image info:')
         # print(output)
 

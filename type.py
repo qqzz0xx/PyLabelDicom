@@ -15,5 +15,6 @@ SUPPORT_FORMAT = ["BMP (*.bmp, *.BMP)",
                   "Nifti ( *.nia, *.nii, *.nii.gz, *.hdr, *.img, *.img.gz )",
                   "Nrrd ( *.nrrd, *.nhdr )",
                   "TIFF ( *.tif, *.TIF, *.tiff, *.TIFF )",
-                  "VTK ( *.vtk )"
+                  "VTK ( *.vtk )",
+                  "JSON ( *.json )"
                   ]
