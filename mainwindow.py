@@ -495,6 +495,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.mayContinue():
             return
 
+        dir = None
         if not fileName:
             if self.loader:
                 dir = self.loader.image_dir
@@ -514,11 +515,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status(self.tr('{} open success!'.format(fileName)))
 
     def _open(self, fileName):
-
         self.clearLabels()
         loader = Loader()
         d = loader.loadDicom(fileName)
-
+        self.view.destroy()
         if loader.isImage():
             self.view = ImageView()
         elif loader.isVolume():

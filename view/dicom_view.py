@@ -18,9 +18,9 @@ class DicomView(BaseView):
         self.layout().setContentsMargins(*m)
 
         for i in range(3):
-            canvas = Canvas(self)
+            canvas = Canvas()
             # canvas.resize(200, 200)
-            scrollArea = QtWidgets.QScrollArea(self)
+            scrollArea = QtWidgets.QScrollArea()
             scrollArea.setWidget(canvas)
             scrollArea.setWidgetResizable(True)
             scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -52,7 +52,5 @@ class DicomView(BaseView):
 
         self.canvas_3d.loadImage(image_data)
 
-        # self.scrollBars = {
-        #     Qt.Horizontal: scrollArea.horizontalScrollBar(),
-        #     Qt.Vertical: scrollArea.verticalScrollBar(),
-        # }
+    def destroy(self):
+        self.canvas_3d.destroy()

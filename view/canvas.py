@@ -47,8 +47,8 @@ class Canvas(QtWidgets.QWidget):
     _createMode = 'polygon'
     _fill_drawing = False
 
-    def __init__(self, parent):
-        super(Canvas, self).__init__(parent)
+    def __init__(self):
+        super(Canvas, self).__init__()
 
         self.epsilon = 10.0
         self._curCursor = CURSOR_DEFAULT

@@ -111,7 +111,7 @@ class Loader:
             importer.Update()
             output = importer.GetOutput()
 
-        print(output)
+        # print(output)
         self.image_data.DeepCopy(output)
 
         print("---laod dicom:  %s seconds ---" % (time.time() - start_time))

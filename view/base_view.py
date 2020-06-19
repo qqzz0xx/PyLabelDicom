@@ -16,8 +16,6 @@ class BaseView(QtWidgets.QWidget):
     def __init__(self):
         super(BaseView, self).__init__()
         self.canvas_list = []
-        print("BaseView:", self)
-        print("canvas_list:", self.canvas_list)
 
     def initSlot(self):
 
@@ -34,6 +32,9 @@ class BaseView(QtWidgets.QWidget):
                 lambda v, canvas=canvas: self.newShape.emit(canvas, v))
             canvas.onMousePress.connect(
                 lambda v, canvas=canvas: self.onMousePress.emit(canvas, v))
+
+    def destroy(self):
+        pass
 
     def loadImage(self, image_data):
         pass

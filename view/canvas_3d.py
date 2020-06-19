@@ -1,19 +1,25 @@
-from qtpy import QtWidgets
+from qtpy import QtWidgets, QtGui
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 
 
-class Canvas3D(QVTKRenderWindowInteractor):
+class Canvas3D(QtWidgets.QFrame):
     def __init__(self):
         super(Canvas3D, self).__init__()
-        # self.setLayout(QtWidgets.QHBoxLayout())
-        # self.vtkWidget = QVTKRenderWindowInteractor(self)
+        m = (0, 0, 0, 0)
+        self.vl = QtWidgets.QVBoxLayout()
+        self.vl.setContentsMargins(*m)
+        self.iren = QVTKRenderWindowInteractor(self)
+        self.vl.addWidget(self.iren)
+        self.setLayout(self.vl)
+
         colors = vtk.vtkNamedColors()
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(colors.GetColor3d("Tomato"))
+        self.renWin().AddRenderer(self.ren)
 
-        self.GetRenderWindow().AddRenderer(self.ren)
-        # self.layout().addWidget(self.vtkWidget)
+    def __del__(self):
+        print('~Canvas3D')
 
     def loadImage(self, image_data):
         r = image_data.GetScalarRange()
@@ -52,7 +58,11 @@ class Canvas3D(QVTKRenderWindowInteractor):
         self.ren.AddVolume(volume)
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
-        self.render()
+        self.renWin().Render()
 
-    def render(self):
-        self.GetRenderWindow().Render()
+    def renWin(self):
+        return self.iren.GetRenderWindow()
+
+    # def destroy(self):
+        # self.iren.GetRenderWindow().RemoveRenderer(self.ren)
+        # self.ren.RemoveAllViewProps()

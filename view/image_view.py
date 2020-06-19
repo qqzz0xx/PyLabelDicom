@@ -13,8 +13,8 @@ class ImageView(BaseView):
         self.layout().setContentsMargins(*m)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        canvas = Canvas(self)
-        scrollArea = QtWidgets.QScrollArea(self)
+        canvas = Canvas()
+        scrollArea = QtWidgets.QScrollArea()
         scrollArea.setWidget(canvas)
         scrollArea.setWidgetResizable(True)
         scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
