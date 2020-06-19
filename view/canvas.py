@@ -151,7 +151,7 @@ class Canvas(QtWidgets.QWidget):
         # self.restoreCursor()
         self._cursor = CURSOR_DEFAULT
         self._slider.setVisible(False)
-        if QtCore.Qt.NoButton == ev.buttons():
+        if Qt.NoButton == ev.buttons() or Qt.LeftButton == ev.buttons():
             if self.height() - _pos.y() < 50:
                 self._slider.setVisible(True)
                 self._slider.setFixedWidth(self.width()-60)
