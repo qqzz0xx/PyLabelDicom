@@ -33,7 +33,7 @@ class BaseView(QtWidgets.QWidget):
             canvas.onMousePress.connect(
                 lambda v, canvas=canvas: self.onMousePress.emit(canvas, v))
 
-    def destroy(self):
+    def clear(self):
         pass
 
     def loadImage(self, image_data):

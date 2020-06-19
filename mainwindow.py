@@ -516,9 +516,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _open(self, fileName):
         self.clearLabels()
+        self.view.clear()
         loader = Loader()
         d = loader.loadDicom(fileName)
-        self.view.destroy()
         if loader.isImage():
             self.view = ImageView()
         elif loader.isVolume():

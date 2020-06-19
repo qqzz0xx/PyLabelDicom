@@ -52,5 +52,5 @@ class DicomView(BaseView):
 
         self.canvas_3d.loadImage(image_data)
 
-    def destroy(self):
-        self.canvas_3d.destroy()
+    def clear(self):
+        self.canvas_3d.clear()

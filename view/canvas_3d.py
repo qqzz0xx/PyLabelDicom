@@ -19,7 +19,8 @@ class Canvas3D(QtWidgets.QFrame):
         self.renWin().AddRenderer(self.ren)
 
     def __del__(self):
-        print('~Canvas3D')
+        # self.iren.Finalize()
+        print('~Canvas3D', self)
 
     def loadImage(self, image_data):
         r = image_data.GetScalarRange()
@@ -63,6 +64,6 @@ class Canvas3D(QtWidgets.QFrame):
     def renWin(self):
         return self.iren.GetRenderWindow()
 
-    # def destroy(self):
-        # self.iren.GetRenderWindow().RemoveRenderer(self.ren)
-        # self.ren.RemoveAllViewProps()
+    def destroy(self):
+        self.ren.RemoveAllViewProps()
+        self.iren.Finalize()
