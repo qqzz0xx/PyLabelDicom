@@ -5,12 +5,14 @@ from qtpy.QtWidgets import QApplication
 
 import utils
 from shape import Shape
+from widgets import FrameSlider
 
 CURSOR_DEFAULT = QtCore.Qt.ArrowCursor
 CURSOR_POINT = QtCore.Qt.PointingHandCursor
 CURSOR_DRAW = QtCore.Qt.CrossCursor
 CURSOR_MOVE = QtCore.Qt.ClosedHandCursor
 CURSOR_GRAB = QtCore.Qt.OpenHandCursor
+CURSOR_SIZE = QtCore.Qt.SizeHorCursor
 
 CREATE, EDIT = 0, 1
 
@@ -34,7 +36,7 @@ def mouseMoveEventWapper(func):
 class Canvas(QtWidgets.QWidget):
     centerChanged = QtCore.Signal(QtCore.QPointF)
     zoomChanged = QtCore.Signal(float)
-    nextFrame = QtCore.Signal(QtCore.QPointF)
+    frameChanged = QtCore.Signal(int)
     onMousePress = QtCore.Signal(QtCore.QPointF)
     drawingPolygon = QtCore.Signal(bool)
     newShape = QtCore.Signal(list)
@@ -85,6 +87,9 @@ class Canvas(QtWidgets.QWidget):
         self._tag_label = QtWidgets.QLabel("", self)
         self._tag_label.setStyleSheet("color: #FF0000")
         self._tag_label.move(10, 40)
+        self._slider = FrameSlider(self)
+        self._slider.setVisible(False)
+        self._slider.valueChanged.connect(self.setSliceIndex)
 
         self._focus_delta = QtCore.QPoint(0, 0)
 
@@ -114,21 +119,24 @@ class Canvas(QtWidgets.QWidget):
     def curFrameIndex(self):
         return self.image_wapper.sliceIndex
 
+    def setSliceIndex(self, val):
+        if self.image_wapper.update(val):
+            self.update()
+            self.frameChanged.emit(val)
+
     def wheelEvent(self, ev: QtGui.QWheelEvent):
         if not self.pixmap():
             return
         mods = ev.modifiers()
         delta = ev.angleDelta()
+        up = delta.y() > 0
         if int(mods) == QtCore.Qt.ControlModifier:
-            scale = self.scale
-            if delta.y() > 0:
-                scale *= 1.1
-            else:
-                scale *= 0.9
-
+            scale = self.scale * 1.1 if up else self.scale * 0.9
             self.zoomChanged.emit(scale)
         else:
-            self.nextFrame.emit(delta)
+            curIdx = self.sliceIndex()
+            v = curIdx - 1 if up else curIdx+1
+            self._slider.setValue(v)
 
     @mouseMoveEventWapper
     def mouseMoveEvent(self, ev):
@@ -136,12 +144,23 @@ class Canvas(QtWidgets.QWidget):
 
         if not self.pixmap():
             return
-
-        pos = self.transformPos(ev.localPos())
+        _pos = ev.localPos()
+        pos = self.transformPos(_pos)
 
         self.prevMovePoint = pos
         # self.restoreCursor()
         self._cursor = CURSOR_DEFAULT
+        self._slider.setVisible(False)
+        if QtCore.Qt.NoButton == ev.buttons():
+            if self.height() - _pos.y() < 50:
+                self._slider.setVisible(True)
+                self._slider.setFixedWidth(self.width()-60)
+                self._slider.move(30, self.height()-25)
+                self._slider.setRange(0, self.image_wapper.maxFrame-1)
+                self._slider.setValueNoSignal(self.sliceIndex())
+
+                self._cursor = CURSOR_SIZE
+                return
 
         if QtCore.Qt.MidButton & ev.buttons():
             mv = pos - self.prevPoint
@@ -689,6 +708,7 @@ class Canvas(QtWidgets.QWidget):
 
     def leaveEvent(self, ev):
         self.restoreCursor()
+        self._slider.setVisible(False)
 
     def focusOutEvent(self, ev):
         self.restoreCursor()

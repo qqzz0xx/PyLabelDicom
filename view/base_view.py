@@ -6,7 +6,7 @@ import utils
 class BaseView(QtWidgets.QWidget):
     centerChanged = QtCore.Signal(Canvas, QtCore.QPointF)
     zoomChanged = QtCore.Signal(Canvas, float)
-    nextFrame = QtCore.Signal(Canvas, QtCore.QPointF)
+    frameChanged = QtCore.Signal(Canvas, int)
     drawingPolygon = QtCore.Signal(Canvas, bool)
     newShape = QtCore.Signal(Canvas, list)
     edgeSelected = QtCore.Signal(Canvas, bool)
@@ -24,8 +24,8 @@ class BaseView(QtWidgets.QWidget):
                 lambda v, canvas=canvas: self.zoomChanged.emit(canvas, v))
             canvas.centerChanged.connect(
                 lambda v, canvas=canvas: self.centerChanged.emit(canvas, v))
-            canvas.nextFrame.connect(
-                lambda v, canvas=canvas: self.nextFrame.emit(canvas, v))
+            canvas.frameChanged.connect(
+                lambda v, canvas=canvas: self.frameChanged.emit(canvas, v))
             canvas.selectionChanged.connect(
                 lambda v, canvas=canvas: self.selectionChanged.emit(canvas, v))
             canvas.newShape.connect(

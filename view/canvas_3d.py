@@ -64,6 +64,6 @@ class Canvas3D(QtWidgets.QFrame):
     def renWin(self):
         return self.iren.GetRenderWindow()
 
-    def destroy(self):
+    def clear(self):
         self.ren.RemoveAllViewProps()
         self.iren.Finalize()

@@ -1,0 +1,15 @@
+from qtpy import QtWidgets
+from qtpy.QtCore import Qt
+
+
+class FrameSlider(QtWidgets.QSlider):
+    def __init__(self, parent):
+        super(FrameSlider, self).__init__(Qt.Horizontal, parent)
+
+    def setValueNoSignal(self, val):
+        self.blockSignals(True)
+        self.setValue(val)
+        self.blockSignals(False)
+
+    def wheelEvent(self, ev):
+        pass

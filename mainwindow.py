@@ -267,8 +267,8 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda canvas, v: self.zoom_widget.setValue(v*100))
         self.view.centerChanged.connect(
             lambda canvas, v: self.centerChanged(canvas, v))
-        self.view.nextFrame.connect(
-            lambda canvas, v: self.nextFrame(canvas, v))
+        self.view.frameChanged.connect(
+            lambda canvas, v: self.frameChanged(canvas, v))
         self.view.selectionChanged.connect(
             lambda canvas, v: self.shapeSelectionChanged(canvas, v))
         self.view.newShape.connect(
@@ -440,17 +440,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
         self.actions.edit.setEnabled(not self.view.editing())
 
-    def nextFrame(self, canvas, delta):
-        curIdx = canvas.curFrameIndex()
-        if delta.y() > 0:
-            curIdx += 1
-        else:
-            curIdx -= 1
-        output = canvas.image_wapper.update(curIdx)
-        if not output:
-            return
-
-        canvas.update()
+    def frameChanged(self, canvas, val):
         slice_types = [(c.sliceType(), c.sliceIndex()) for c in self.view]
         items = [item for item in self.allLabelList if (
             item.shape().slice_type, item.shape().slice_index) in slice_types]
@@ -606,7 +596,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateCanvas()
 
     def keyPressEvent(self, event):
-        if key == QtCore.Qt.Key_Space:
+        if event.key() == QtCore.Qt.Key_Space:
             if self.view:
                 self.view[-1].newTagLabel()
 
@@ -636,6 +626,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
-    # win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
+    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()
