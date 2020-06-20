@@ -5,6 +5,9 @@ import utils
 from qtpy import QtCore
 from qtpy import QtGui
 
+from type import Mode_ALL, Mode_polygon, Mode_rectangle, Mode_circle,\
+    Mode_line, Mode_point, Mode_linestrip, Mode_tag, Mode_box
+
 # import labelme.utils
 
 
@@ -119,21 +122,21 @@ class Shape(object):
             line_path = QtGui.QPainterPath()
             vrtx_path = QtGui.QPainterPath()
 
-            if self.shape_type == 'rectangle':
+            if self.shape_type == Mode_rectangle:
                 assert len(self.points) in [1, 2]
                 if len(self.points) == 2:
                     rectangle = self.getRectFromLine(*self.points)
                     line_path.addRect(rectangle)
                 for i in range(len(self.points)):
                     self.drawVertex(vrtx_path, i)
-            elif self.shape_type == "circle":
+            elif self.shape_type == Mode_circle:
                 assert len(self.points) in [1, 2]
                 if len(self.points) == 2:
                     rectangle = self.getCircleRectFromLine(self.points)
                     line_path.addEllipse(rectangle)
                 for i in range(len(self.points)):
                     self.drawVertex(vrtx_path, i)
-            elif self.shape_type == "linestrip":
+            elif self.shape_type == Mode_linestrip:
                 line_path.moveTo(self.points[0])
                 for i, p in enumerate(self.points):
                     line_path.lineTo(p)
@@ -199,7 +202,7 @@ class Shape(object):
         return post_i
 
     def containsPoint(self, point):
-        if self.shape_type == 'tag':
+        if self.shape_type == Mode_tag:
             return False
         return self.makePath().contains(point)
 
@@ -214,7 +217,7 @@ class Shape(object):
         return rectangle
 
     def makePath(self):
-        if self.shape_type == 'rectangle':
+        if self.shape_type == Mode_rectangle:
             path = QtGui.QPainterPath()
             if len(self.points) == 2:
                 rectangle = self.getRectFromLine(*self.points)
@@ -250,7 +253,7 @@ class Shape(object):
         return copy.deepcopy(self)
 
     def __len__(self):
-        if self.shape_type != 'tag':
+        if self.shape_type != Mode_tag:
             return len(self.points)
         else:
             return 1

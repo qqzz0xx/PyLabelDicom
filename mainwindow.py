@@ -13,8 +13,8 @@ from view import Canvas, BaseView, DicomView, ImageView, VideoView
 from utils import Loader, Saver, ImageDataWapper
 from widgets import ZoomWidget, ToolBar, TaglistWidget
 from widgets import LabelListWidgetItem, LabelListWidget
-from type import SUPPORT_FORMAT
 from shape import Shape
+import type
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -52,46 +52,47 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(1200, 800)
 
         action = functools.partial(utils.createAction, self)
-        open_ = action("&Open", self.open, 'open', u'Open image or label file')
-        exit_ = action("&Exit", tip=u'Quit Application')
+        open_ = action("&Open", self.open, 'open',
+                       self.tr('Open image or label file'))
+        exit_ = action("&Exit", tip=self.tr('Quit Application'))
         openDir_ = action("&Open Dir", self.open, 'open')
         createMode_ = action(
             "&Create Polygons",
-            lambda: self.toggleDrawMode(canvas.Mode_polygon),
+            lambda: self.toggleDrawMode(type.Mode_polygon),
             'objects',
-            u'Start drawing polygons')
+            self.tr('Start drawing polygons'))
 
         createRectangleMode_ = action(
             self.tr('Create Rectangle'),
-            lambda: self.toggleDrawMode(canvas.Mode_rectangle),
+            lambda: self.toggleDrawMode(type.Mode_rectangle),
             'objects',
             self.tr('Start drawing rectangles'),
             enabled=False,
         )
         createCircleMode_ = action(
             self.tr('Create Circle'),
-            lambda: self.toggleDrawMode(canvas.Mode_circle),
+            lambda: self.toggleDrawMode(type.Mode_circle),
             'objects',
             self.tr('Start drawing circles'),
             enabled=False,
         )
         createLineMode_ = action(
             self.tr('Create Line'),
-            lambda: self.toggleDrawMode(canvas.Mode_line),
+            lambda: self.toggleDrawMode(type.Mode_line),
             'objects',
             self.tr('Start drawing lines'),
             enabled=False,
         )
         createPointMode_ = action(
             self.tr('Create Point'),
-            lambda: self.toggleDrawMode(canvas.Mode_point),
+            lambda: self.toggleDrawMode(type.Mode_point),
             'objects',
             self.tr('Start drawing points'),
             enabled=False,
         )
         createLineStripMode_ = action(
             self.tr('Create LineStrip'),
-            lambda: self.toggleDrawMode(canvas.Mode_linestrip),
+            lambda: self.toggleDrawMode(type.Mode_linestrip),
             'objects',
             self.tr('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
             enabled=False,
@@ -252,7 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initViewSlot()
 
     def init(self):
-        self.toggleDrawMode('polygon')
+        self.toggleDrawMode(type.Mode_polygon)
 
         keymaps = self._config['keymap']
         for km in keymaps:
@@ -511,7 +512,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not fileName:
             if self.loader:
                 dir = self.loader.image_dir
-            formats = "ALL(*);;" + ";;".join(SUPPORT_FORMAT)
+            formats = "ALL(*);;" + ";;".join(type.SUPPORT_FORMAT)
             fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,
                                                                 "Open File", dir, formats)
         print("open: ", fileName)

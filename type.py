@@ -18,3 +18,24 @@ SUPPORT_FORMAT = ["BMP (*.bmp, *.BMP)",
                   "VTK ( *.vtk )",
                   "JSON ( *.json )"
                   ]
+
+
+Mode_polygon = 'polygon'
+Mode_rectangle = 'rectangle'
+Mode_circle = 'circle'
+Mode_line = 'line'
+Mode_point = 'point'
+Mode_linestrip = 'linestrip'
+Mode_tag = 'tag'
+Mode_box = 'box'
+
+Mode_ALL = (
+    Mode_polygon,
+    Mode_rectangle,
+    Mode_circle,
+    Mode_line,
+    Mode_point,
+    Mode_linestrip,
+    Mode_tag,
+    Mode_box,
+)
