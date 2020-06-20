@@ -42,7 +42,7 @@ class Canvas(QtWidgets.QWidget):
     newShape = QtCore.Signal(list)
     edgeSelected = QtCore.Signal(bool)
     selectionChanged = QtCore.Signal(list)
-    image_wapper = None
+
     scale = 1.0
     mode = CREATE
 
@@ -51,7 +51,7 @@ class Canvas(QtWidgets.QWidget):
 
     def __init__(self):
         super(Canvas, self).__init__()
-
+        self.image_wapper = None
         self.epsilon = 10.0
         self._curCursor = CURSOR_DEFAULT
         self._cursor = CURSOR_DEFAULT
@@ -104,6 +104,12 @@ class Canvas(QtWidgets.QWidget):
             raise ValueError('Unsupported createMode: %s' % value)
         Canvas._createMode = value
 
+    def setFrameSliderEnabled(self, enabled):
+        self._slider.setEnabled(enabled)
+
+    def setImageWapper(self, wapper):
+        self.image_wapper = wapper
+
     def drawing(self):
         return Canvas.mode == CREATE
 
@@ -152,10 +158,12 @@ class Canvas(QtWidgets.QWidget):
         self._cursor = CURSOR_DEFAULT
         self._slider.setVisible(False)
         if Qt.NoButton == ev.buttons() or Qt.LeftButton == ev.buttons():
-            if self.height() - _pos.y() < 50:
+            height = self.parent().height()
+            width = self.parent().width()
+            if height - _pos.y() < 50 and self.image_wapper.maxFrame > 1:
                 self._slider.setVisible(True)
-                self._slider.setFixedWidth(self.width()-60)
-                self._slider.move(30, self.height()-25)
+                self._slider.setFixedWidth(width-60)
+                self._slider.move(30, height-25)
                 self._slider.setRange(0, self.image_wapper.maxFrame-1)
                 self._slider.setValueNoSignal(self.sliceIndex())
 
