@@ -29,9 +29,12 @@ class BaseView(QtWidgets.QWidget):
             canvas.selectionChanged.connect(
                 lambda v, canvas=canvas: self.selectionChanged.emit(canvas, v))
             canvas.newShape.connect(
-                lambda v, canvas=canvas: self.newShape.emit(canvas, v))
+                lambda v, canvas=canvas: self._newShape(canvas, v))
             canvas.onMousePress.connect(
                 lambda v, canvas=canvas: self.onMousePress.emit(canvas, v))
+
+    def _newShape(self, canvas, shapes):
+        self.newShape.emit(canvas, shapes)
 
     def clear(self):
         pass

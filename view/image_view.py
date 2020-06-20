@@ -26,8 +26,6 @@ class ImageView(BaseView):
         self.initSlot()
 
     def loadImage(self, image_data):
-
         canvas = self[0]
         wapper = ImageDataWapper(image_data, 2)
-        wapper.update(0)
-        canvas.image_wapper = wapper
+        canvas.setImageWapper(wapper)

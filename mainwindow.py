@@ -97,6 +97,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
             enabled=False,
         )
+        createBoxMode_ = action(
+            self.tr('Create Box'),
+            lambda: self.toggleDrawMode(type.Mode_box),
+            'objects',
+            self.tr('Start drawing box.'),
+            enabled=False,
+        )
 
         delete_ = action(
             self.tr('Delete Polygons'),
@@ -156,6 +163,7 @@ class MainWindow(QtWidgets.QMainWindow):
             createLineMode=createLineMode_,
             createPointMode=createPointMode_,
             createLineStripMode=createLineStripMode_,
+            createBoxMode=createBoxMode_,
             edit=edit_,
             delete=delete_,
             save=save_,
@@ -186,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 createLineMode_,
                 createPointMode_,
                 createLineStripMode_,
+                createBoxMode_,
                 None,
                 edit_,
                 None,
@@ -461,6 +470,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createLineStripMode.setEnabled(
             mode != canvas.Mode_linestrip)
         self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
+        self.actions.createBoxMode.setEnabled(mode != canvas.Mode_box)
         self.actions.edit.setEnabled(not self.view.editing())
 
     def frameChanged(self, canvas, val):
@@ -470,9 +480,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelListWidget.clear()
         for c in self.view:
             d = [i.shape()
-                 for i in items if i.shape().slice_type == c.sliceType()]
-            c.loadShapes(d)
-            for s in d:
+                 for i in items if i.shape().slice_type == c.sliceType() and i.shape().shape_type != type.Mode_box]
+            if d:
+                c.loadShapes(d)
+                for s in d:
+                    self.labelListWidget.addShape(s)
+        shapes = [
+            item.shape() for item in self.allLabelList if item.shape().shape_type == type.Mode_box]
+        if shapes:
+            for c in self.view:
+                c.loadShapes(shapes)
+            for s in shapes:
                 self.labelListWidget.addShape(s)
 
     def centerChanged(self, canvas, delta):

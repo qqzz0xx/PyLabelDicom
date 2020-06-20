@@ -100,8 +100,13 @@ class Canvas(QtWidgets.QWidget):
     def setFrameSliderEnabled(self, enabled):
         self._slider.setEnabled(enabled)
 
+    def updateToCenter(self):
+        idx = self.image_wapper.getCenterFrameIndex()
+        self._slider.setValue(idx)
+
     def setImageWapper(self, wapper):
         self.image_wapper = wapper
+        self._slider.setRange(0, self.image_wapper.maxFrame - 1)
 
     def drawing(self):
         return Canvas.mode == CREATE
@@ -197,7 +202,7 @@ class Canvas(QtWidgets.QWidget):
             if self._createMode in [Mode_polygon, Mode_linestrip]:
                 self.line[0] = self.current[-1]
                 self.line[1] = pos
-            elif self._createMode == Mode_rectangle:
+            elif self._createMode in [Mode_box, Mode_rectangle]:
                 self.line.points = [self.current[0], pos]
                 self.line.close()
             elif self._createMode == Mode_circle:
@@ -307,6 +312,13 @@ class Canvas(QtWidgets.QWidget):
                         assert len(self.current.points) == 1
                         self.current.points = self.line.points
                         self.finalise()
+                    elif self._createMode in [Mode_box]:
+                        assert len(self.current.points) == 1
+                        self.current.points = self.line.points
+                        self.newShape.emit([self.current])
+                        self.setHiding(False)
+                        self.update()
+                        self.current = None
                     elif self._createMode == Mode_linestrip:
                         self.current.addPoint(self.line[1])
                         self.line[0] = self.current[-1]
@@ -569,12 +581,14 @@ class Canvas(QtWidgets.QWidget):
         return True
 
     def storeShapes(self):
+        return
         shapesBackup = []
         for shape in self.shapes:
             shapesBackup.append(shape.copy())
         if len(self.shapesBackups) >= 10:
             self.shapesBackups = self.shapesBackups[-9:]
         self.shapesBackups.append(shapesBackup)
+        print(self.shapesBackups)
 
     def restoreShape(self):
         if not self.isShapeRestorable():
@@ -598,6 +612,8 @@ class Canvas(QtWidgets.QWidget):
         self.hVertex = None
         self.hEdge = None
         self.repaint()
+
+        print(self.shapes)
 
     def lastShape(self):
         if len(self.shapes) > 0:
@@ -641,11 +657,13 @@ class Canvas(QtWidgets.QWidget):
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and \
                     self.isVisible(shape):
-                if shape.shape_type != Mode_tag:
+                if shape.shape_type == Mode_tag:
+                    tag_strs.append(shape.label.desc)
+                elif shape.shape_type == Mode_box:
+                    shape.paint(self, p)
+                else:
                     shape.fill = shape.selected or shape == self.hShape
                     shape.paint(p)
-                else:
-                    tag_strs.append(shape.label.desc)
         if self.current:
             self.current.paint(p)
             self.line.line_color = self.current.line_color
@@ -654,7 +672,7 @@ class Canvas(QtWidgets.QWidget):
             for s in self.selectedShapesCopy:
                 s.paint(p)
 
-        if (self.fillDrawing() and self._createMode == 'polygon' and
+        if (self.fillDrawing() and self._createMode == Mode_polygon and
                 self.current is not None and len(self.current.points) >= 2):
             drawing_shape = self.current.copy()
             drawing_shape.addPoint(self.line[1])
