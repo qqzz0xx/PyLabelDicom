@@ -136,10 +136,10 @@ class MainWindow(QtWidgets.QMainWindow):
         deleteTag_ = action(self.tr('&Delete Tag'),
                             slot=lambda: self.colorTableWidget.deleteSelected(),
                             )
-        # load_ = action(self.tr('&Import'),
-        #                slot=self.loadJson,
-        #                icon='copy',
-        #                tip=self.tr('import tags or labels'))
+        fitWindow_ = action(self.tr('&Fit Window'),
+                            slot=self.fitWindow,
+                            icon='fit-window',
+                            tip=self.tr('Zoom follows window size'))
 
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
@@ -164,6 +164,7 @@ class MainWindow(QtWidgets.QMainWindow):
             homeTag=homeTag_,
             endTag=endTag_,
             deleteTag=deleteTag_,
+            fitWindow=fitWindow_,
             # load=load_,
 
             fileMenu=(
@@ -199,6 +200,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.labelListDock.toggleViewAction(),
                 self.allLabelListDock.toggleViewAction(),
                 self.colorTableDock.toggleViewAction(),
+                None,
+                fitWindow_,
             ),
             labelListMenu=(
                 delete_,
@@ -217,7 +220,8 @@ class MainWindow(QtWidgets.QMainWindow):
             createMode_,
             edit_,
             None,
-            zoom_
+            zoom_,
+            fitWindow_,
 
         )
         self.toolbar = ToolBar('toolbar')
@@ -277,6 +281,24 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda canvas, v: self.status(
                 "world pos: [{0},{1}]".format(v.x(), v.y()))
         )
+
+    def fitWindow(self):
+        scale = [self.scaleFitWindow(s) for s in self.view]
+        scale = scale[0] if len(scale) == 1 else min(*scale)
+        print('fitWindow ', scale)
+        self.zoom_widget.setValue(scale*100)
+
+    def scaleFitWindow(self, canvas):
+        """Figure out the size of the pixmap to fit the main widget."""
+        e = 2.0  # So that no scrollbars are generated.
+        w1 = canvas.parent().width() - e
+        h1 = canvas.parent().height() - e
+        a1 = w1 / h1
+        # Calculate a new scale value based on the pixmap's aspect ratio.
+        w2 = canvas.pixmap().width() - 0.0
+        h2 = canvas.pixmap().height() - 0.0
+        a2 = w2 / h2
+        return w1 / w2 if a2 >= a1 else h1 / h2
 
     def loadJson(self, file):
         if file:
@@ -521,6 +543,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view.addMenu(self.actions.editMenu)
 
         self.view.loadImage(d)
+        self.zoom_widget.setValue(100)
         self.actions.saveAs.setEnabled(False)
         self.loader = loader
 
