@@ -1,11 +1,33 @@
 from qtpy import QtWidgets, QtGui
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
+from type import Mode_point
+import utils
+
+
+class SphereActor(vtk.vtkActor):
+    def __init__(self):
+        colors = vtk.vtkNamedColors()
+        # Create a sphere
+        sphereSource = vtk.vtkSphereSource()
+        sphereSource.SetCenter(0.0, 0.0, 0.0)
+        sphereSource.SetRadius(5.0)
+        # Make the surface smooth.
+        sphereSource.SetPhiResolution(100)
+        sphereSource.SetThetaResolution(100)
+
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(sphereSource.GetOutputPort())
+
+        self.SetMapper(mapper)
+        self.GetProperty().SetColor(colors.GetColor3d("Cornsilk"))
 
 
 class Canvas3D(QtWidgets.QFrame):
     def __init__(self):
         super(Canvas3D, self).__init__()
+        self.shapes = []
+
         m = (0, 0, 0, 0)
         self.vl = QtWidgets.QVBoxLayout()
         self.vl.setContentsMargins(*m)
@@ -15,7 +37,7 @@ class Canvas3D(QtWidgets.QFrame):
 
         colors = vtk.vtkNamedColors()
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(colors.GetColor3d("Tomato"))
+        self.ren.SetBackground(colors.GetColor3d("SkyBlue"))
         self.renWin().AddRenderer(self.ren)
 
     def __del__(self):
@@ -67,3 +89,29 @@ class Canvas3D(QtWidgets.QFrame):
     def clear(self):
         self.ren.RemoveAllViewProps()
         self.iren.Finalize()
+
+    def getMainWin(self):
+        win = QtWidgets.QApplication.instance().win
+        return win
+
+    def getShapes(self):
+        win = self.getMainWin()
+        shapes = [item.shape() for item in win.allLabelList if item.shape().shape_type ==
+                  Mode_point]
+
+        return shapes
+
+    def refresh(self):
+        print('refresh')
+        shapes = self.getShapes()
+        shapes = [s for s in shapes if s not in self.shapes]
+        for s in self.getShapes():
+            canvas = self.getMainWin().view[s.slice_type]
+            mat = canvas.image_wapper.getImageToVoxMatrix()
+            vpos = utils.sliceToVoxPos1(s.slice_type, s.slice_index, mat, s[0])
+
+            actor = SphereActor()
+            actor.SetPosition(*vpos)
+            self.ren.AddActor(actor)
+            self.shapes.append(s)
+            print('add {} to 3d'.format(s))

@@ -54,6 +54,7 @@ class DicomView(BaseView):
         for c in self.canvas_list:
             c.loadShapes(shapes_3d, False)
         self.newShape.emit(canvas, shapes)
+        self.canvas_3d.refresh()
 
     def curSliceIndexs(self):
         return [s.sliceIndex() for s in self.canvas_list]

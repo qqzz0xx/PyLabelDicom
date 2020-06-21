@@ -28,4 +28,5 @@ class ImageView(BaseView):
     def loadImage(self, image_data):
         canvas = self[0]
         wapper = ImageDataWapper(image_data, 2)
+        wapper.update(0)
         canvas.setImageWapper(wapper)
