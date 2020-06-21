@@ -6,13 +6,14 @@ from utils import ImageDataWapper
 from .base_view import BaseView
 from .canvas_3d import Canvas3D
 from type import Mode_box
-from shape_box import ShapeBox
+from shape_box import ShapeBox, Box3D
 
 
 class DicomView(BaseView):
     def __init__(self):
         super(DicomView, self).__init__()
         self.scrollAreas = []
+        self.shapes_3d = []
         m = (0, 0, 0, 0)
         self.setLayout(QtWidgets.QGridLayout())
         self.layout().setContentsMargins(*m)
@@ -44,17 +45,43 @@ class DicomView(BaseView):
         self.initSlot()
 
     def _newShape(self, canvas, shapes):
-        shapes_3d = []
+        slice_index = canvas.sliceIndex()
+        slice_type = canvas.sliceType()
+        new_shapes = []
+        new_shapes_3d = []
+        win = QtWidgets.QApplication.instance().win
+        label = win.getCurLabel()
         for shape in shapes:
             if shape.shape_type == Mode_box:
                 shape.__class__ = ShapeBox
-                shape.init(canvas)
-                shapes_3d.append(shape)
-                # shapes.remove(shape)
-        for c in self.canvas_list:
-            c.loadShapes(shapes_3d, False)
+                box = Box3D()
+                box.label = label
+                p1 = utils.sliceToVoxPos(canvas, shape[0])
+                p1[slice_type] = slice_index + 20
+                p2 = utils.sliceToVoxPos(canvas, shape[1])
+                p2[slice_type] = slice_index - 20
+                box.addPoint(p1)
+                box.addPoint(p2)
+
+                new_shapes_3d.append(box)
+            else:
+                new_shapes.append(shape)
+
         self.newShape.emit(canvas, shapes)
+
+        for canvas in self.canvas_list:
+            rects = [s.getRectShape(canvas)
+                     for s in new_shapes_3d if isinstance(s, Box3D) and s.getRectShape(canvas)]
+            canvas.loadShapes(rects, False)
+        self.shapes_3d.extend(new_shapes_3d)
         self.canvas_3d.refresh()
+
+    def _frameChanged(self, canvas, v):
+        self.frameChanged.emit(canvas, v)
+        for canvas in self.canvas_list:
+            rects = [s.getRectShape(canvas)
+                     for s in self.shapes_3d if isinstance(s, Box3D) and s.getRectShape(canvas)]
+            canvas.loadShapes(rects, False)
 
     def curSliceIndexs(self):
         return [s.sliceIndex() for s in self.canvas_list]

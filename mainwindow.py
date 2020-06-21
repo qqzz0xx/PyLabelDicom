@@ -296,6 +296,7 @@ class MainWindow(QtWidgets.QMainWindow):
         scale = [self.scaleFitWindow(s) for s in self.view]
         scale = scale[0] if len(scale) == 1 else min(*scale)
         print('fitWindow ', scale)
+        [s.resetImageToCenter() for s in self.view]
         self.zoom_widget.setValue(scale*100)
 
     def scaleFitWindow(self, canvas):
@@ -396,15 +397,19 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.select_line_color = QtGui.QColor(255, 255, 255)
         shape.select_fill_color = QtGui.QColor(r, g, b, a*0.8)
 
+    def getCurLabel(self):
+        curItem = self.colorTableWidget.currentItem()
+        label = self.colorTableWidget.getObjectByItem(curItem)
+        return label
+
     def newShape(self, canvas, shapes):
         if not shapes:
             return
 
         for shape in shapes:
             if shape.label == None:
-                curItem = self.colorTableWidget.currentItem()
-                label = self.colorTableWidget.getObjectByItem(curItem)
-                shape = canvas.lastShape()
+                label = self.getCurLabel()
+                # shape = canvas.lastShape()
                 shape.label = label
             print("new shape: ", shape)
             self.addLabel(shape)
@@ -483,7 +488,7 @@ class MainWindow(QtWidgets.QMainWindow):
                       for i in items if i.shape().slice_type == c.sliceType() and i.shape().shape_type != type.Mode_box]
             shapes_3d = [
                 i.shape() for i in self.allLabelList if i.shape().shape_type == type.Mode_box]
-            shapes.extend(shapes_3d)
+            # shapes.extend(shapes_3d)
             c.loadShapes(shapes)
             for s in shapes:
                 self.labelListWidget.addShape(s)

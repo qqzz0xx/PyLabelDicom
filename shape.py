@@ -180,7 +180,7 @@ class Shape(object):
         else:
             assert False, "unsupported vertex shape"
 
-    def nearestVertex(self, point, epsilon, canvas):
+    def nearestVertex(self, point, epsilon):
         min_distance = float('inf')
         min_i = None
         for i, p in enumerate(self.points):
@@ -190,7 +190,7 @@ class Shape(object):
                 min_i = i
         return min_i
 
-    def nearestEdge(self, point, epsilon, canvas):
+    def nearestEdge(self, point, epsilon):
         min_distance = float('inf')
         post_i = None
         for i in range(len(self.points)):

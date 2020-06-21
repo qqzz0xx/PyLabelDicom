@@ -25,13 +25,16 @@ class BaseView(QtWidgets.QWidget):
             canvas.centerChanged.connect(
                 lambda v, canvas=canvas: self.centerChanged.emit(canvas, v))
             canvas.frameChanged.connect(
-                lambda v, canvas=canvas: self.frameChanged.emit(canvas, v))
+                lambda v, canvas=canvas: self._frameChanged(canvas, v))
             canvas.selectionChanged.connect(
                 lambda v, canvas=canvas: self.selectionChanged.emit(canvas, v))
             canvas.newShape.connect(
                 lambda v, canvas=canvas: self._newShape(canvas, v))
             canvas.onMousePress.connect(
                 lambda v, canvas=canvas: self.onMousePress.emit(canvas, v))
+
+    def _frameChanged(self, canvas, shapes):
+        self.frameChanged.emit(canvas, shapes)
 
     def _newShape(self, canvas, shapes):
         self.newShape.emit(canvas, shapes)

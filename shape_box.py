@@ -1,91 +1,74 @@
 from shape import Shape
-from qtpy import QtGui
+from qtpy import QtGui, QtCore
+from qtpy.QtCore import QPointF
 from type import Mode_box
 import utils
 import numpy as np
 
 
-class ShapeBox(Shape):
-    height = 50
-    bounds = []
+class Box3D:
+    def __init__(self):
+        self.bounds = []
+        self.points = []
+        self.label = None
 
-    def init(self, canvas):
-        p1 = utils.sliceToVoxPos(canvas, self[0])
-        p2 = utils.sliceToVoxPos(canvas, self[1])
-        offset = [0, 0, 0]
-        offset[canvas.sliceType()] = int(self.height / 2)
-        p1 = np.array(p1[0:3])
-        p2 = np.array(p2[0:3])
-        p1 += offset
-        p2 -= offset
+    def addPoint(self, pos):
+        if not self.bounds:
+            for i in range(3):
+                self.bounds.append(pos[i])
+                self.bounds.append(pos[i])
+            return
 
-        xmin = min(p1[0], p2[0])
-        ymin = min(p1[1], p2[1])
-        zmin = min(p1[2], p2[2])
+        for i in range(3):
+            self.bounds[i*2] = min(pos[i], self.bounds[i*2])
+            self.bounds[i*2+1] = max(pos[i], self.bounds[i*2+1])
 
-        xmax = max(p1[0], p2[0])
-        ymax = max(p1[1], p2[1])
-        zmax = max(p1[2], p2[2])
+    def containsPoint(self, pos):
+        return self.bounds[0] <= pos[0] < self.bounds[1] \
+            and self.bounds[2] <= pos[1] < self.bounds[3]\
+            and self.bounds[4] <= pos[2] < self.bounds[5]
 
-        bds = [xmin, xmax, ymin, ymax, zmin, zmax]
+    def contains(self, slice_type, slice_index):
+        return self.bounds[slice_type*2] <= slice_index < self.bounds[slice_type*2+1]
 
-        print(bds)
-        print(p1)
-        print(p2)
+    def computeRect(self):
+        points = []
+        bds = self.bounds
+        p1 = [bds[2], bds[4]]
+        p2 = [bds[3], bds[5]]
+        points.extend([QPointF(*p1), QPointF(*p2)])
+        p1 = [bds[0], bds[4]]
+        p2 = [bds[1], bds[5]]
+        points.extend([QPointF(*p1), QPointF(*p2)])
+        p1 = [bds[0], bds[2]]
+        p2 = [bds[1], bds[3]]
+        points.extend([QPointF(*p1), QPointF(*p2)])
+        self.points = points
 
-    def nearestVertex(self, point, epsilon, canvas):
-        min_distance = float('inf')
-        min_i = None
-        for i, p in enumerate(self.points):
-            dist = utils.distance(p - point)
-            if dist <= epsilon and dist < min_distance:
-                min_distance = dist
-                min_i = i
-        return min_i
-
-    def nearestEdge(self, point, epsilon, canvas):
-        min_distance = float('inf')
-        post_i = None
-        for i in range(len(self.points)):
-            line = [self.points[i - 1], self.points[i]]
-            dist = utils.distancetoline(point, line)
-            if dist <= epsilon and dist < min_distance:
-                min_distance = dist
-                post_i = i
-        return post_i
-
-    def paint(self, canvas, painter):
+    def getRectangle(self, slice_type):
         if not self.points:
-            return
-        if len(self.points) != 2:
-            return
+            self.computeRect()
+        i = slice_type * 2
+        return self.points[i:i+2]
 
-        color = self.select_line_color \
-            if self.selected else self.line_color
-        pen = QtGui.QPen(color)
-        # Try using integer sizes for smoother drawing(?)
-        pen.setWidth(max(1, int(round(2.0 / self.scale))))
-        painter.setPen(pen)
+    def getRectShape(self, canvas):
+        st = canvas.sliceType()
+        si = canvas.sliceIndex()
+        if self.contains(st, si):
+            s = Shape(st, si)
+            s.shape_type = Mode_box
+            s.points = self.getRectangle(st)
+            if self.label:
+                s.label = self.label
+                r, g, b, a = s.label.color
+                s.line_color = QtGui.QColor(r, g, b, a)
+                s.vertex_fill_color = QtGui.QColor(r, g, b, a)
+                s.hvertex_fill_color = QtGui.QColor(255, 255, 255)
+                s.fill_color = QtGui.QColor(r, g, b, a*0.5)
+                s.select_line_color = QtGui.QColor(255, 255, 255)
+                s.select_fill_color = QtGui.QColor(r, g, b, a*0.8)
+            return s
 
-        line_path = QtGui.QPainterPath()
-        vrtx_path = QtGui.QPainterPath()
 
-        curIdx = canvas.sliceIndex()
-        curTy = canvas.sliceType()
-        halfH = int(self.height / 2)
-        h = curIdx - self.slice_index
-
-        if curTy == self.slice_type:
-            if h <= halfH and h > -halfH:
-                rectangle = self.getRectFromLine(*self.points)
-                line_path.addRect(rectangle)
-                for i in range(len(self.points)):
-                    self.drawVertex(vrtx_path, i)
-
-        painter.drawPath(line_path)
-        painter.drawPath(vrtx_path)
-        painter.fillPath(vrtx_path, self._vertex_fill_color)
-        if self.fill:
-            color = self.select_fill_color \
-                if self.selected else self.fill_color
-            painter.fillPath(line_path, color)
+class ShapeBox(Shape):
+    pass

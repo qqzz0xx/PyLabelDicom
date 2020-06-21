@@ -92,6 +92,9 @@ class Canvas(QtWidgets.QWidget):
         self.unHighlight()
         self.deSelectShape()
 
+    def resetImageToCenter(self):
+        self._focus_delta = QtCore.QPoint(0, 0)
+
     def setCreateMode(self, value):
         if value not in Mode_ALL:
             raise ValueError('Unsupported createMode: %s' % value)
@@ -151,12 +154,16 @@ class Canvas(QtWidgets.QWidget):
         _pos = ev.localPos()
         pos = self.transformPos(_pos)
 
+        vpos = utils.sliceToVoxPos(self, pos)
+        app = QtWidgets.QApplication.instance()
+        app.win.status("image{} vox{}".format(pos, vpos))
+
         self.prevMovePoint = pos
         # self.restoreCursor()
         self._cursor = CURSOR_DEFAULT
         self._slider.setVisible(False)
         if (Qt.NoButton == ev.buttons() or Qt.LeftButton == ev.buttons())\
-                and not self.current:
+                and not self.current and not self.movingShape:
             height = self.parent().height()
             width = self.parent().width()
             if height - _pos.y() < 50 and self.image_wapper.maxFrame > 1:
@@ -257,9 +264,8 @@ class Canvas(QtWidgets.QWidget):
         for shape in reversed([s for s in self.shapes if self.isVisible(s)]):
             # Look for a nearby vertex to highlight. If that fails,
             # check if we happen to be inside a shape.
-            index = shape.nearestVertex(pos, self.epsilon / self.scale, self)
-            index_edge = shape.nearestEdge(
-                pos, self.epsilon / self.scale, self)
+            index = shape.nearestVertex(pos, self.epsilon / self.scale)
+            index_edge = shape.nearestEdge(pos, self.epsilon / self.scale)
             if index is not None:
                 if self.selectedVertex():
                     self.hShape.highlightClear()
@@ -298,8 +304,6 @@ class Canvas(QtWidgets.QWidget):
             return
         pos = self.transformPos(ev.localPos())
         self._curPos = pos
-
-        self.onMousePress.emit(pos)
 
         if ev.button() == QtCore.Qt.LeftButton:
             if self.drawing():
@@ -615,8 +619,6 @@ class Canvas(QtWidgets.QWidget):
         self.hEdge = None
         self.repaint()
 
-        print(self.shapes)
-
     def lastShape(self):
         if len(self.shapes) > 0:
             return self.shapes[-1]
@@ -663,7 +665,7 @@ class Canvas(QtWidgets.QWidget):
                 if shape.shape_type == Mode_tag:
                     tag_strs.append(shape.label.desc)
                 elif shape.shape_type == Mode_box:
-                    shape.paint(self, p)
+                    shape.paint(p)
                 else:
                     shape.paint(p)
         if self.current:
