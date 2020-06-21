@@ -64,27 +64,26 @@ def qcolorToJson(color):
 
 
 def sliceToVoxPos(canvas, pos):
-    _pos = [pos.x(), pos.y(), 0, 1]
-    matrix = canvas.image_wapper.getResliceMatrix()
-    matrix.MultiplyPoint(_pos, _pos)
-    return _pos
+    matrix = canvas.image_wapper.getImageToVoxMatrix()
+    slice_type = canvas.sliceType()
+    slice_index = canvas.sliceIndex()
+    return sliceToVoxPos1(slice_type, slice_index, matrix, pos)
 
 
-def sliceToVoxPos1(slice_type, slice_index, matrix,  pos):
+def sliceToVoxPos1(slice_type, slice_index, matrix, pos):
     _pos = [pos.x(), pos.y(), 0, 1]
-    matrix.SetElement(slice_type, 3, slice_index)
-    matrix.MultiplyPoint(_pos, _pos)
+    _pos = matrix.MultiplyPoint(_pos)
+    _pos = list(_pos[0:3])
+    _pos[slice_type] = slice_index
     return _pos
 
 
 def voxToSlicePos(canvas, pos):
-    matrix = canvas.image_wapper.getResliceMatrix()
-    matrix_inv = vtk.vtkMatrix4x4()
-    matrix_inv.DeepCopy(matrix)
-    matrix_inv.Invert()
+    matrix = canvas.image_wapper.getImageToVoxMatrix()
+    matrix.Invert()
     _pos = [pos.x(), pos.y(), pos.z(), 1]
-    matrix.MultiplyPoint(_pos, _pos)
-    return _pos
+    _pos = matrix.MultiplyPoint(_pos)
+    return list(_pos[0:2])
 
 
 class struct(object):
