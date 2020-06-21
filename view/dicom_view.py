@@ -3,7 +3,7 @@ import utils
 from .canvas import Canvas
 from .canvas import CREATE, EDIT
 from utils import ImageDataWapper
-from .base_view import BaseView
+from .base_view import BaseView, ScrollArea
 from .canvas_3d import Canvas3D
 from type import Mode_box
 from shape_box import ShapeBox, Box3D
@@ -21,12 +21,12 @@ class DicomView(BaseView):
         for i in range(3):
             canvas = Canvas()
             # canvas.resize(200, 200)
-            scrollArea = QtWidgets.QScrollArea()
+            scrollArea = ScrollArea()
             scrollArea.setWidget(canvas)
-            scrollArea.setWidgetResizable(True)
-            scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-            scrollArea.setHorizontalScrollBarPolicy(
-                QtCore.Qt.ScrollBarAlwaysOff)
+            # scrollArea.setWidgetResizable(True)
+            # scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            # scrollArea.setHorizontalScrollBarPolicy(
+            #     QtCore.Qt.ScrollBarAlwaysOff)
             self.scrollAreas.append(scrollArea)
             self.canvas_list.append(canvas)
 
@@ -47,7 +47,6 @@ class DicomView(BaseView):
     def _newShape(self, canvas, shapes):
         slice_index = canvas.sliceIndex()
         slice_type = canvas.sliceType()
-        new_shapes = []
         new_shapes_3d = []
         win = QtWidgets.QApplication.instance().win
         label = win.getCurLabel()
@@ -55,6 +54,7 @@ class DicomView(BaseView):
             if shape.shape_type == Mode_box:
                 shape.__class__ = ShapeBox
                 box = Box3D()
+                shape.box = box
                 box.label = label
                 p1 = utils.sliceToVoxPos(canvas, shape[0])
                 p1[slice_type] = slice_index + 20
@@ -62,10 +62,7 @@ class DicomView(BaseView):
                 p2[slice_type] = slice_index - 20
                 box.addPoint(p1)
                 box.addPoint(p2)
-
                 new_shapes_3d.append(box)
-            else:
-                new_shapes.append(shape)
 
         self.newShape.emit(canvas, shapes)
 

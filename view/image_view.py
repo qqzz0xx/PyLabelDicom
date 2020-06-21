@@ -1,6 +1,6 @@
 from qtpy import QtWidgets, QtCore
 from qtpy.QtWidgets import QSizePolicy
-from .base_view import BaseView
+from .base_view import BaseView, ScrollArea
 from .canvas import Canvas
 from utils import ImageDataWapper
 
@@ -14,11 +14,11 @@ class ImageView(BaseView):
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         canvas = Canvas()
-        scrollArea = QtWidgets.QScrollArea()
+        scrollArea = ScrollArea()
         scrollArea.setWidget(canvas)
-        scrollArea.setWidgetResizable(True)
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # scrollArea.setWidgetResizable(True)
+        # scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.layout().addWidget(scrollArea)
 
         self.canvas_list.append(canvas)

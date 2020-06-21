@@ -260,7 +260,7 @@ class Canvas(QtWidgets.QWidget):
         # - Highlight shapes
         # - Highlight vertex
         # Update shape/vertex fill and tooltip value accordingly.
-        self.setToolTip("Image")
+        # self.setToolTip("Image")
         for shape in reversed([s for s in self.shapes if self.isVisible(s)]):
             # Look for a nearby vertex to highlight. If that fails,
             # check if we happen to be inside a shape.
@@ -286,7 +286,7 @@ class Canvas(QtWidgets.QWidget):
                 self.hShape = shape
                 self.hEdge = index_edge
                 self.setToolTip(
-                    "Click & drag to move shape '%s'" % shape.label)
+                    "Click & drag to move shape '%s'" % shape.label.desc)
                 self.setStatusTip(self.toolTip())
                 # self.overrideCursor(CURSOR_GRAB)
                 self._cursor = CURSOR_GRAB

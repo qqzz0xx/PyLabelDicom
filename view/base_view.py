@@ -71,3 +71,15 @@ class BaseView(QtWidgets.QWidget):
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
+
+
+class ScrollArea(QtWidgets.QScrollArea):
+    def __init__(self, *args, **kwargs):
+        super(ScrollArea, self).__init__(*args, **kwargs)
+        self.setWidgetResizable(True)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def wheelEvent(self, ev):
+        if ev.type() == QtCore.QEvent.Wheel:
+            ev.ignore()

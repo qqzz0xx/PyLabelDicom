@@ -466,7 +466,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def toggleDrawMode(self, mode):
         self.view.toggleDrawMode(mode)
-
         self.actions.createMode.setEnabled(mode != canvas.Mode_polygon)
         self.actions.createRectangleMode.setEnabled(
             mode != canvas.Mode_rectangle)
@@ -475,7 +474,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createLineStripMode.setEnabled(
             mode != canvas.Mode_linestrip)
         self.actions.createPointMode.setEnabled(mode != canvas.Mode_point)
-        self.actions.createBoxMode.setEnabled(mode != canvas.Mode_box)
+        enabled = mode != canvas.Mode_box
+        enabled = enabled if not self.loader else enabled and self.loader.isVolume()
+        self.actions.createBoxMode.setEnabled(enabled)
         self.actions.edit.setEnabled(not self.view.editing())
 
     def frameChanged(self, canvas, val):
@@ -564,6 +565,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view.loadImage(d)
         self.zoom_widget.setValue(100)
         self.actions.saveAs.setEnabled(False)
+        self.actions.createBoxMode.setEnabled(loader.isVolume())
+        self.toggleDrawMode(type.Mode_polygon)
         self.loader = loader
 
     def mayContinue(self):
