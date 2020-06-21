@@ -3,6 +3,7 @@ import os.path as osp
 import math
 import numpy as np
 import json
+import vtk
 
 pwd = osp.dirname(osp.abspath(__file__))
 
@@ -60,6 +61,30 @@ def jsonToQColor(j):
 
 def qcolorToJson(color):
     return color.getRgb()
+
+
+def sliceToVoxPos(canvas, pos):
+    _pos = [pos.x(), pos.y(), 0, 1]
+    matrix = canvas.image_wapper.getResliceMatrix()
+    matrix.MultiplyPoint(_pos, _pos)
+    return _pos
+
+
+def sliceToVoxPos1(slice_type, slice_index, matrix,  pos):
+    _pos = [pos.x(), pos.y(), 0, 1]
+    matrix.SetElement(slice_type, 3, slice_index)
+    matrix.MultiplyPoint(_pos, _pos)
+    return _pos
+
+
+def voxToSlicePos(canvas, pos):
+    matrix = canvas.image_wapper.getResliceMatrix()
+    matrix_inv = vtk.vtkMatrix4x4()
+    matrix_inv.DeepCopy(matrix)
+    matrix_inv.Invert()
+    _pos = [pos.x(), pos.y(), pos.z(), 1]
+    matrix.MultiplyPoint(_pos, _pos)
+    return _pos
 
 
 class struct(object):

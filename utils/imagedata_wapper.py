@@ -36,6 +36,11 @@ class ImageDataWapper:
         self._reslice.SetOutputDimensionality(2)
         self._resliceMatrix = self.getInitMatrix()
 
+    def getResliceMatrix(self):
+        matrix = vtk.vtkMatrix4x4()
+        matrix.DeepCopy(self._resliceMatrix)
+        return matrix
+
     def getCenterFrameIndex(self):
         if not self.image_data:
             return

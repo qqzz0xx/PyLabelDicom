@@ -1,10 +1,58 @@
 from shape import Shape
 from qtpy import QtGui
 from type import Mode_box
+import utils
+import numpy as np
 
 
 class ShapeBox(Shape):
     height = 50
+    bounds = []
+
+    def init(self, canvas):
+        p1 = utils.sliceToVoxPos(canvas, self[0])
+        p2 = utils.sliceToVoxPos(canvas, self[1])
+        offset = [0, 0, 0]
+        offset[canvas.sliceType()] = int(self.height / 2)
+        p1 = np.array(p1[0:3])
+        p2 = np.array(p2[0:3])
+        p1 += offset
+        p2 -= offset
+
+        xmin = min(p1[0], p2[0])
+        ymin = min(p1[1], p2[1])
+        zmin = min(p1[2], p2[2])
+
+        xmax = max(p1[0], p2[0])
+        ymax = max(p1[1], p2[1])
+        zmax = max(p1[2], p2[2])
+
+        bds = [xmin, xmax, ymin, ymax, zmin, zmax]
+
+        print(bds)
+        print(p1)
+        print(p2)
+
+    def nearestVertex(self, point, epsilon, canvas):
+        min_distance = float('inf')
+        min_i = None
+        for i, p in enumerate(self.points):
+            dist = utils.distance(p - point)
+            if dist <= epsilon and dist < min_distance:
+                min_distance = dist
+                min_i = i
+        return min_i
+
+    def nearestEdge(self, point, epsilon, canvas):
+        min_distance = float('inf')
+        post_i = None
+        for i in range(len(self.points)):
+            line = [self.points[i - 1], self.points[i]]
+            dist = utils.distancetoline(point, line)
+            if dist <= epsilon and dist < min_distance:
+                min_distance = dist
+                post_i = i
+        return post_i
 
     def paint(self, canvas, painter):
         if not self.points:

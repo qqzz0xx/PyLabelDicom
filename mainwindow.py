@@ -479,19 +479,15 @@ class MainWindow(QtWidgets.QMainWindow):
             item.shape().slice_type, item.shape().slice_index) in slice_types]
         self.labelListWidget.clear()
         for c in self.view:
-            d = [i.shape()
-                 for i in items if i.shape().slice_type == c.sliceType() and i.shape().shape_type != type.Mode_box]
-            if d:
-                c.loadShapes(d)
-                for s in d:
-                    self.labelListWidget.addShape(s)
-        shapes = [
-            item.shape() for item in self.allLabelList if item.shape().shape_type == type.Mode_box]
-        if shapes:
-            for c in self.view:
+            shapes = [i.shape()
+                      for i in items if i.shape().slice_type == c.sliceType() and i.shape().shape_type != type.Mode_box]
+            shapes_3d = [
+                i.shape() for i in self.allLabelList if i.shape().shape_type == type.Mode_box and i.shape().slice_type == c.sliceType()]
+            shapes.extend(shapes_3d)
+            if shapes:
                 c.loadShapes(shapes)
-            for s in shapes:
-                self.labelListWidget.addShape(s)
+                for s in shapes:
+                    self.labelListWidget.addShape(s)
 
     def centerChanged(self, canvas, delta):
         pass

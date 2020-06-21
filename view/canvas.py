@@ -155,7 +155,8 @@ class Canvas(QtWidgets.QWidget):
         # self.restoreCursor()
         self._cursor = CURSOR_DEFAULT
         self._slider.setVisible(False)
-        if Qt.NoButton == ev.buttons() or Qt.LeftButton == ev.buttons():
+        if (Qt.NoButton == ev.buttons() or Qt.LeftButton == ev.buttons())\
+                and not self.current:
             height = self.parent().height()
             width = self.parent().width()
             if height - _pos.y() < 50 and self.image_wapper.maxFrame > 1:
@@ -256,8 +257,9 @@ class Canvas(QtWidgets.QWidget):
         for shape in reversed([s for s in self.shapes if self.isVisible(s)]):
             # Look for a nearby vertex to highlight. If that fails,
             # check if we happen to be inside a shape.
-            index = shape.nearestVertex(pos, self.epsilon / self.scale)
-            index_edge = shape.nearestEdge(pos, self.epsilon / self.scale)
+            index = shape.nearestVertex(pos, self.epsilon / self.scale, self)
+            index_edge = shape.nearestEdge(
+                pos, self.epsilon / self.scale, self)
             if index is not None:
                 if self.selectedVertex():
                     self.hShape.highlightClear()
@@ -657,12 +659,12 @@ class Canvas(QtWidgets.QWidget):
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and \
                     self.isVisible(shape):
+                shape.fill = shape.selected or shape == self.hShape
                 if shape.shape_type == Mode_tag:
                     tag_strs.append(shape.label.desc)
                 elif shape.shape_type == Mode_box:
                     shape.paint(self, p)
                 else:
-                    shape.fill = shape.selected or shape == self.hShape
                     shape.paint(p)
         if self.current:
             self.current.paint(p)

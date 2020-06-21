@@ -12,7 +12,6 @@ from shape_box import ShapeBox
 class DicomView(BaseView):
     def __init__(self):
         super(DicomView, self).__init__()
-        self.shapes = []
         self.scrollAreas = []
         m = (0, 0, 0, 0)
         self.setLayout(QtWidgets.QGridLayout())
@@ -49,11 +48,11 @@ class DicomView(BaseView):
         for shape in shapes:
             if shape.shape_type == Mode_box:
                 shape.__class__ = ShapeBox
+                shape.init(canvas)
                 shapes_3d.append(shape)
                 # shapes.remove(shape)
         for c in self.canvas_list:
             c.loadShapes(shapes_3d, False)
-        self.shapes.extend(shapes_3d)
         self.newShape.emit(canvas, shapes)
 
     def curSliceIndexs(self):

@@ -9,3 +9,6 @@ from .utils import jsonToQColor
 from .utils import qcolorToJson
 from .utils import struct
 from .utils import createIcon
+from .utils import sliceToVoxPos
+from .utils import sliceToVoxPos1
+from .utils import voxToSlicePos
