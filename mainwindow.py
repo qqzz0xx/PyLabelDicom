@@ -287,10 +287,10 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda canvas, v: self.shapeSelectionChanged(canvas, v))
         self.view.newShape.connect(
             lambda canvas, v: self.newShape(canvas, v))
-        self.view.onMousePress.connect(
-            lambda canvas, v: self.status(
-                "world pos: [{0},{1}]".format(v.x(), v.y()))
-        )
+        # self.view.onMousePress.connect(
+        #     lambda canvas, v: self.status(
+        #         "world pos: [{0},{1},{2}]".format(v.x(), v.y(), v.z()))
+        # )
 
     def fitWindow(self):
         scale = [self.scaleFitWindow(s) for s in self.view]
@@ -482,12 +482,11 @@ class MainWindow(QtWidgets.QMainWindow):
             shapes = [i.shape()
                       for i in items if i.shape().slice_type == c.sliceType() and i.shape().shape_type != type.Mode_box]
             shapes_3d = [
-                i.shape() for i in self.allLabelList if i.shape().shape_type == type.Mode_box and i.shape().slice_type == c.sliceType()]
+                i.shape() for i in self.allLabelList if i.shape().shape_type == type.Mode_box]
             shapes.extend(shapes_3d)
-            if shapes:
-                c.loadShapes(shapes)
-                for s in shapes:
-                    self.labelListWidget.addShape(s)
+            c.loadShapes(shapes)
+            for s in shapes:
+                self.labelListWidget.addShape(s)
 
     def centerChanged(self, canvas, delta):
         pass
@@ -661,8 +660,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-
     win = MainWindow()
+    app.win = win
     win.show()
     win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
