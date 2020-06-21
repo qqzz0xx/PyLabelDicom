@@ -8,8 +8,7 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('LabelDicom')
     app.setWindowIcon(utils.createIcon('icon'))
-
     win = MainWindow()
+    app.win = win
     win.show()
-
     app.exec()
