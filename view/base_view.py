@@ -1,4 +1,4 @@
-from qtpy import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore, QtGui
 from .canvas import Canvas, CREATE, EDIT
 import utils
 
