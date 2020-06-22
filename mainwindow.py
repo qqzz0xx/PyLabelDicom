@@ -112,7 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr('Delete the selected polygons'),
             enabled=False)
 
-        edit_ = action('&Edit Label', self.editLabel,
+        edit_ = action('&Edit Label', lambda: self.toggleDrawMode(None),
                        'edit', 'Modify the label of the selected polygon',
                        enabled=False)
 
@@ -241,6 +241,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # utils.addActions(self.canvas.menu, self.actions.editMenu)
         self.view.addMenu(self.actions.editMenu)
         self.labelListWidget.addMenu(self.actions.labelListMenu)
+        self.allLabelList.addMenu(self.actions.labelListMenu)
         self.colorTableWidget.addMenu(self.actions.tagListMenu)
 
         self.addMenu("&File", self.actions.fileMenu)
@@ -251,11 +252,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.zoom_widget.valueChanged.connect(self.zoomChanged)
         self.labelListWidget.itemChanged.connect(self.labelItemChanged)
-        self.labelListWidget.itemDoubleClicked.connect(self.editLabel)
+        self.labelListWidget.itemDoubleClicked.connect(
+            lambda: (
+                self.toggleDrawMode(None),
+                self.labelSelectionChanged()
+            ))
         self.labelListWidget.itemSelectionChanged.connect(
             self.labelSelectionChanged)
         self.labelListWidget.itemDeleteSelected.connect(
             self.deleteSelectedShape)
+        self.allLabelList.itemSelectionChanged.connect(
+            self.allLabelListSelected)
+        self.allLabelList.itemDoubleClicked.connect(
+            self.editLabel)
+
         self.colorTableWidget.itemsDelete.connect(self.tagsDelete)
 
         self.init()
@@ -349,18 +359,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.remLabels(del_shapes)
                 self.setDirty()
 
+    def allLabelListSelected(self):
+        shapes = [item.shape() for item in self.allLabelList.selectedItems()]
+        self.view.selectShapes(shapes)
+
     def labelSelectionChanged(self):
         if not self._selectSlotBlock:
             if self.view.editing():
                 selected_shapes = []
                 for item in self.labelListWidget.selectedItems():
                     selected_shapes.append(item.shape())
-                if selected_shapes:
-                    for canvas in self.view:
-                        canvas.selectShapes(selected_shapes)
-                else:
-                    for canvas in self.view:
-                        canvas.deSelectShape()
+                self.view.selectShapes(selected_shapes)
 
     def labelItemChanged(self, item):
         shape = item.shape()
@@ -375,17 +384,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.allLabelList.removeItem(item)
 
     def editLabel(self, item=None):
+        print(item)
         self.toggleDrawMode(None)
-
-        if not item:
-            return
-        if not isinstance(item, LabelListWidgetItem):
-            return
-        self.labelSelectionChanged()
+        if item:
+            s = item.shape()
+            canvas = self.view[s.slice_type]
+            if canvas.sliceIndex() != s.slice_index:
+                canvas.setSliceIndex(s.slice_index)
+            self.view.selectShapes([s])
 
     def addLabel(self, shape):
-
-        self.labelListWidget.addShape(shape)
+        if shape.shape_type != type.Mode_box:
+            self.labelListWidget.addShape(shape)
         self.allLabelList.addShape(shape)
 
         label = shape.label
@@ -565,7 +575,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view.loadImage(d)
         self.zoom_widget.setValue(100)
         self.actions.saveAs.setEnabled(False)
-        self.actions.createBoxMode.setEnabled(loader.isVolume())
         self.toggleDrawMode(type.Mode_polygon)
         self.loader = loader
 

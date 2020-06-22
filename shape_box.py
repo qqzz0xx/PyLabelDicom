@@ -1,5 +1,5 @@
 from shape import Shape
-from qtpy import QtGui, QtCore
+from qtpy import QtGui, QtCore, QtWidgets
 from qtpy.QtCore import QPointF
 from type import Mode_box
 import utils
@@ -11,6 +11,14 @@ class Box3D:
         self.bounds = []
         self.points = []
         self.label = None
+        self.shapes = []
+        for i in range(3):
+            s = ShapeBox(i, 0)
+            self.shapes.append(s)
+
+    def zero(self):
+        self.bounds = []
+        self.points = []
 
     def addPoint(self, pos):
         if not self.bounds:
@@ -46,8 +54,7 @@ class Box3D:
         self.points = points
 
     def getRectangle(self, slice_type):
-        if not self.points:
-            self.computeRect()
+        self.computeRect()
         i = slice_type * 2
         return self.points[i:i+2]
 
@@ -55,7 +62,8 @@ class Box3D:
         st = canvas.sliceType()
         si = canvas.sliceIndex()
         if self.contains(st, si):
-            s = Shape(st, si)
+            s = self.shapes[st]
+            s.box = self
             s.shape_type = Mode_box
             s.points = self.getRectangle(st)
             if self.label:
@@ -71,4 +79,28 @@ class Box3D:
 
 
 class ShapeBox(Shape):
-    pass
+    def updateBox(self):
+        win = QtWidgets.QApplication.instance().win
+        canvas = win.view[self.slice_type]
+        box = self.box
+        p1 = utils.sliceToVoxPos(canvas, self[0])
+        p1[self.slice_type] = self.box.bounds[self.slice_type*2]
+        p2 = utils.sliceToVoxPos(canvas, self[1])
+        p2[self.slice_type] = self.box.bounds[self.slice_type*2 + 1]
+
+        box.zero()
+        box.addPoint(p1)
+        box.addPoint(p2)
+
+        for s in win.view:
+            if s != canvas:
+                box.getRectShape(s)
+                s.update()
+
+    def moveBy(self, offset):
+        super(ShapeBox, self).moveBy(offset)
+        self.updateBox()
+
+    def moveVertexBy(self, i, offset):
+        super(ShapeBox, self).moveVertexBy(i, offset)
+        self.updateBox()

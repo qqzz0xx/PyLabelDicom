@@ -80,6 +80,13 @@ class DicomView(BaseView):
                      for s in self.shapes_3d if isinstance(s, Box3D) and s.getRectShape(canvas)]
             canvas.loadShapes(rects, False)
 
+    def selectShapes(self, shapes):
+        print(shapes)
+        boxs = [s.box for s in shapes if s.shape_type == Mode_box]
+        boxs_shapes = [s for box in boxs for s in box.shapes]
+        shapes.extend(boxs_shapes)
+        super(DicomView, self).selectShapes(shapes)
+
     def curSliceIndexs(self):
         return [s.sliceIndex() for s in self.canvas_list]
 

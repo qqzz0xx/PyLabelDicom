@@ -57,6 +57,14 @@ class BaseView(QtWidgets.QWidget):
             else:
                 canvas.setMode(EDIT)
 
+    def selectShapes(self, shapes):
+        if shapes:
+            for c in self.canvas_list:
+                c.selectShapes(shapes)
+        else:
+            for c in self.canvas_list:
+                c.deSelectShape()
+
     def editing(self):
         if self.canvas_list:
             return self.canvas_list[0].editing()
