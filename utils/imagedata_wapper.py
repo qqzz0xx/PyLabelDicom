@@ -8,16 +8,15 @@ from utils import Loader
 
 
 class ImageDataWapper:
-    image_data = None
+    image_data = vtk.vtkImageData()
     qimage = None
     sliceType = None
     sliceIndex = 0
     maxFrame = 0
 
     def __init__(self, image_data, slice_type=type.SLICE_Z):
-        self.image_data = image_data
+        self.formatImageData(image_data)
         self.sliceType = slice_type
-
         self._spacing = self.image_data.GetSpacing()
         self._extent = self.image_data.GetExtent()
         self._dims = self.image_data.GetDimensions()
@@ -35,6 +34,24 @@ class ImageDataWapper:
         self._reslice = vtk.vtkImageReslice()
         self._reslice.SetOutputDimensionality(2)
         self._resliceMatrix = self.getInitMatrix()
+
+    def formatImageData(self, data):
+        if data.GetNumberOfScalarComponents() == 1:
+            imageToRgb = vtk.vtkImageMapToColors()
+            imageToRgb.SetOutputFormatToRGB()
+            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
+            imageToRgb.SetInputData(data)
+            imageToRgb.Update()
+            data = imageToRgb.GetOutput()
+
+        if data.GetScalarType() != vtk.VTK_UNSIGNED_CHAR:
+            shift = vtk.vtkImageShiftScale()
+            shift.SetOutputScalarTypeToUnsignedChar()
+            shift.SetInputData(data)
+            shift.Update()
+            data = shift.GetOutput()
+
+        self.image_data.DeepCopy(data)
 
     def getImageToVoxMatrix(self):
         matrix = vtk.vtkMatrix4x4()
@@ -84,7 +101,7 @@ class ImageDataWapper:
         dim = data.GetDimensions()
         nda = data.GetPointData().GetScalars()
         nda = nps.vtk_to_numpy(nda)
-        nda = nda.reshape((dim[1], dim[0], 3), order='C')
+        nda = nda.reshape((dim[1], dim[0], self._channel), order='C')
         self.qimage = q2nda.array2qimage(nda)
         return self.qimage
 
@@ -115,21 +132,6 @@ class ImageDataWapper:
             self._reslice.Update()
             out_data = self._reslice.GetOutput()
             self.sliceIndex = idx
-
-        if out_data.GetNumberOfScalarComponents() == 1:
-            imageToRgb = vtk.vtkImageMapToColors()
-            imageToRgb.SetOutputFormatToRGB()
-            imageToRgb.SetLookupTable(vtk.vtkScalarsToColors())
-            imageToRgb.SetInputData(out_data)
-            imageToRgb.Update()
-            out_data = imageToRgb.GetOutput()
-
-        if out_data.GetScalarType() != vtk.VTK_UNSIGNED_CHAR:
-            shift = vtk.vtkImageShiftScale()
-            shift.SetOutputScalarTypeToUnsignedChar()
-            shift.SetInputData(out_data)
-            shift.Update()
-            out_data = shift.GetOutput()
 
         out_data = self.conv2qimg(out_data)
 

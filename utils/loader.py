@@ -115,6 +115,9 @@ class Loader:
         self.image_data.DeepCopy(output)
 
         print("---laod dicom:  %s seconds ---" % (time.time() - start_time))
+        print("image dims ", self._dims)
+        print("image spacing ", self._spacing)
+        print("image channel ", self._channel)
         # print('load image info:')
         # print(output)
 

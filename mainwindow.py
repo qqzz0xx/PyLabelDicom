@@ -680,6 +680,6 @@ if __name__ == "__main__":
     win = MainWindow()
     app.win = win
     win.show()
-    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
+    win._open(r"e:\testData\0.nii")
 
     app.exec()
