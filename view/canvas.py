@@ -468,7 +468,8 @@ class Canvas(QtWidgets.QWidget):
     def selectShapes(self, shapes):
         if not self.image_wapper:
             return
-        t = [s for s in shapes if s.slice_type == self.sliceType()]
+        t = [s for s in shapes if s.slice_type ==
+             self.sliceType() and s in self.shapes]
         # for s in shapes:
         #     if s.slice_type == self.sliceType():
         #         t.append(s)
