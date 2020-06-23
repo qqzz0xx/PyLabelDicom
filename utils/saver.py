@@ -1,6 +1,7 @@
 import json
 import os.path as osp
 from shape import Shape
+from type import Mode_box
 
 
 class Saver:
@@ -8,16 +9,21 @@ class Saver:
     suffix = ".json"
 
     def formatShape(self, s):
-        data = dict(
-            label=s.label.__dict__,
-            points=[(p.x(), p.y()) for p in s.points],
-            shape_type=s.shape_type,
-            flags=s.flags,
-            slice_type=s.slice_type,
-            slice_index=s.slice_index,
-            _closed=s._closed,
-
-        )
+        if s.shape_type == Mode_box:
+            data = dict(
+                label=s.label.__dict__,
+                box=s.box.bounds
+            )
+        else:
+            data = dict(
+                label=s.label.__dict__,
+                points=[(p.x(), p.y()) for p in s.points],
+                shape_type=s.shape_type,
+                flags=s.flags,
+                slice_type=s.slice_type,
+                slice_index=s.slice_index,
+                _closed=s._closed,
+            )
         return data
 
     def saveLabels(self, dirname, shapes, imagePath):
@@ -34,7 +40,7 @@ class Saver:
         with open(path, 'w') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        saveDirName = dirname
+        self.saveDirName = dirname
 
     def loadLabels(self, path):
         with open(path) as f:
