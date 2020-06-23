@@ -7,7 +7,8 @@ import numpy as np
 
 
 class Box3D:
-    def __init__(self):
+    def __init__(self, parent):
+        self.parent = parent
         self.bounds = []
         self.points = []
         self.label = None

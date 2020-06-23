@@ -90,12 +90,8 @@ class Canvas3D(QtWidgets.QFrame):
         self.ren.RemoveAllViewProps()
         self.iren.Finalize()
 
-    def getMainWin(self):
-        win = QtWidgets.QApplication.instance().win
-        return win
-
     def getShapes(self):
-        win = self.getMainWin()
+        win = utils.getMainWin()
         shapes = [item.shape() for item in win.allLabelList if item.shape().shape_type ==
                   Mode_point]
 

@@ -249,6 +249,9 @@ class Shape(object):
     def highlightClear(self):
         self._highlightIndex = None
 
+    def clear(self):
+        pass
+
     def copy(self):
         return copy.deepcopy(self)
 

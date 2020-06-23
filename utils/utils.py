@@ -86,6 +86,11 @@ def voxToSlicePos(canvas, pos):
     return list(_pos[0:2])
 
 
+def getMainWin():
+    win = QtWidgets.QApplication.instance().win
+    return win
+
+
 class struct(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

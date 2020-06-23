@@ -378,6 +378,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def remLabels(self, shapes):
         for shape in shapes:
+            shape.clear()
             item = self.labelListWidget.findItemByShape(shape)
             self.labelListWidget.removeItem(item)
             item = self.allLabelList.findItemByShape(shape)
@@ -436,7 +437,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def deleteSelectedShape(self):
         shapes = [s for canvas in self.view for s in canvas.selectedShapes]
-
         if shapes:
             yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
             msg = self.tr(
@@ -449,7 +449,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 del_shapes = [
                     s for canvas in self.view for s in canvas.deleteSelected()]
-                self.remLabels(del_shapes)
+                boxs = {s.box.parent for s in shapes if s.shape_type == type.Mode_box}
+                self.remLabels(set(del_shapes) | boxs)
                 self.setDirty()
                 # if self.noShapes():
                 #     for action in self.actions.onShapesPresent:
@@ -680,6 +681,6 @@ if __name__ == "__main__":
     win = MainWindow()
     app.win = win
     win.show()
-    win._open(r"e:\testData\0.nii")
+    win._open(r"F:\github\labeldicom_cpp\testData\0_resized.nii.gz")
 
     app.exec()

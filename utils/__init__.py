@@ -12,3 +12,4 @@ from .utils import createIcon
 from .utils import sliceToVoxPos
 from .utils import sliceToVoxPos1
 from .utils import voxToSlicePos
+from .utils import getMainWin

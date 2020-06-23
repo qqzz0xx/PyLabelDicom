@@ -53,7 +53,7 @@ class DicomView(BaseView):
         for shape in shapes:
             if shape.shape_type == Mode_box:
                 shape.__class__ = ShapeBox
-                box = Box3D()
+                box = Box3D(shape)
                 shape.box = box
                 box.label = label
                 p1 = utils.sliceToVoxPos(canvas, shape[0])
@@ -67,17 +67,18 @@ class DicomView(BaseView):
         self.newShape.emit(canvas, shapes)
 
         for canvas in self.canvas_list:
-            rects = [s.getRectShape(canvas)
-                     for s in new_shapes_3d if isinstance(s, Box3D) and s.getRectShape(canvas)]
+            rects = [
+                s.getRectShape(canvas) for s in new_shapes_3d
+                if isinstance(s, Box3D) and s.getRectShape(canvas)]
             canvas.loadShapes(rects, False)
-        self.shapes_3d.extend(new_shapes_3d)
         self.canvas_3d.refresh()
 
     def _frameChanged(self, canvas, v):
         self.frameChanged.emit(canvas, v)
+        boxs = [s.box for s in utils.getMainWin().allLabelList.findShapesByType(Mode_box)]
         for canvas in self.canvas_list:
-            rects = [s.getRectShape(canvas)
-                     for s in self.shapes_3d if isinstance(s, Box3D) and s.getRectShape(canvas)]
+            rects = [box.getRectShape(canvas)
+                     for box in boxs if box.getRectShape(canvas)]
             canvas.loadShapes(rects, False)
 
     def selectShapes(self, shapes):
