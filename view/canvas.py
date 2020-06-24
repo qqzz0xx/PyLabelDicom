@@ -470,12 +470,9 @@ class Canvas(QtWidgets.QWidget):
             return
         t = [s for s in shapes if s.slice_type ==
              self.sliceType() and s in self.shapes]
-        # for s in shapes:
-        #     if s.slice_type == self.sliceType():
-        #         t.append(s)
         if t:
-            self.setHiding(True)
             self.selectionChanged.emit(t)
+            self.setHiding(True)
             self.update()
 
     def deSelectShape(self):

@@ -1,4 +1,4 @@
-from qtpy import QtWidgets, QtGui
+from qtpy import QtWidgets, QtGui, QtCore
 import os.path as osp
 import math
 import numpy as np
@@ -89,6 +89,12 @@ def voxToSlicePos(canvas, pos):
 def getMainWin():
     win = QtWidgets.QApplication.instance().win
     return win
+
+
+def createIconByColor(color):
+    pix = QtGui.QPixmap(16, 16)
+    pix.fill(color)
+    return QtGui.QIcon(pix)
 
 
 class struct(object):

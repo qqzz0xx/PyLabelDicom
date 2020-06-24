@@ -1,6 +1,7 @@
 from qtpy import QtWidgets, QtCore, QtGui
 from qtpy.QtCore import Qt
 from .html_delegate import HTMLDelegate
+from .tag_edit_dialog import TagEditDialog
 from utils import struct, addActions
 
 
@@ -111,6 +112,18 @@ class TaglistWidget(QtWidgets.QTreeView):
     def addItem(self, item):
         self.model().setItem(self.model().rowCount(), 0, item)
         item.setSizeHint(self.itemDelegate().sizeHint(None, None))
+
+    def addTag(self):
+        dlg = TagEditDialog(self)
+        pos = QtGui.QCursor.pos()
+        pos = self.mapFromGlobal(pos)
+        pos = self.mapToGlobal(QtCore.QPoint(0, pos.y()-150))
+        dlg.move(pos)
+        ok = dlg.exec()
+        if ok:
+            obj = dlg.getTagObj()
+            item = self.createItem(obj.id, obj.color, obj.desc)
+            self.currentItem()
 
     def mousePressEvent(self, ev):
         super(TaglistWidget, self).mousePressEvent(ev)

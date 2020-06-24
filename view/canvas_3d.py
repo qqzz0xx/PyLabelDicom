@@ -102,7 +102,7 @@ class Canvas3D(QtWidgets.QFrame):
         shapes = self.getShapes()
         shapes = [s for s in shapes if s not in self.shapes]
         for s in self.getShapes():
-            canvas = self.getMainWin().view[s.slice_type]
+            canvas = utils.getMainWin().view[s.slice_type]
             mat = canvas.image_wapper.getImageToVoxMatrix()
             vpos = utils.sliceToVoxPos1(s.slice_type, s.slice_index, mat, s[0])
 

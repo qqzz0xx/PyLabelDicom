@@ -142,8 +142,10 @@ class MainWindow(QtWidgets.QMainWindow):
                          tip=self.tr('Go to a end tag'),
                          )
         deleteTag_ = action(self.tr('&Delete Tag'),
-                            slot=lambda: self.colorTableWidget.deleteSelected(),
-                            )
+                            slot=lambda: self.colorTableWidget.deleteSelected())
+        addTag_ = action(self.tr('&Add Tag'),
+                         slot=lambda: self.colorTableWidget.addTag())
+
         fitWindow_ = action(self.tr('&Fit Window'),
                             slot=self.fitWindow,
                             icon='fit-window',
@@ -217,6 +219,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 delete_,
             ),
             tagListMenu=(
+                addTag_,
                 deleteTag_,
             )
         )

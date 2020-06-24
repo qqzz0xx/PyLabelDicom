@@ -40,6 +40,10 @@
     "action": "createLineStripMode"
   },
   {
+    "key": "ctrl + 7",
+    "action": "createBoxMode"
+  },
+  {
     "key": "Ctrl + `",
     "action": "edit"
   },
