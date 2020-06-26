@@ -63,6 +63,7 @@ class Canvas(QtWidgets.QWidget):
         self.hideBackround = False
         self.movingShape = False
         self._fill_drawing = True
+        self.isEnter = False
 
         self._Painter = QtGui.QPainter()
         self.lineColor = Shape.line_color
@@ -376,14 +377,14 @@ class Canvas(QtWidgets.QWidget):
         elif ev.button() == QtCore.Qt.LeftButton and self.selectedShapes:
             self._cursor = CURSOR_GRAB
 
-        # if self.movingShape and self.hShape:
-        #     index = self.shapes.index(self.hShape)
-        #     if (self.shapesBackups[-1][index].points !=
-        #             self.shapes[index].points):
-        #         self.storeShapes()
-        #         self.shapeMoved.emit()
+        if self.movingShape and self.hShape:
+            index = self.shapes.index(self.hShape)
+            if (self.shapesBackups[-1][index].points !=
+                    self.shapes[index].points):
+                self.storeShapes()
+                # self.shapeMoved.emit()
 
-        #     self.movingShape = False
+            self.movingShape = False
 
     def keyPressEvent(self, ev):
         key = ev.key()
@@ -577,6 +578,19 @@ class Canvas(QtWidgets.QWidget):
         self.newShape.emit(self.shapes[-1:])
         self.update()
 
+    def undoLastPoint(self):
+        if not self.current or self.current.isClosed():
+            self.restoreShape()
+
+            return
+        self.current.popPoint()
+        if len(self.current) > 0:
+            self.line[0] = self.current[-1]
+        else:
+            self.current = None
+            self.drawingPolygon.emit(False)
+        self.repaint()
+
     def isShapeRestorable(self):
         if len(self.shapesBackups) < 2:
             return False
@@ -728,12 +742,14 @@ class Canvas(QtWidgets.QWidget):
     def leaveEvent(self, ev):
         self.restoreCursor()
         self._slider.setVisible(False)
+        self.isEnter = False
 
     def focusOutEvent(self, ev):
         self.restoreCursor()
 
     def enterEvent(self, ev):
         self.overrideCursor(self._curCursor)
+        self.isEnter = True
 
     def overrideCursor(self, cursor):
         old_cursor = QApplication.overrideCursor()

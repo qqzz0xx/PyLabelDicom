@@ -31,8 +31,8 @@ class TaglistWidget(QtWidgets.QTreeView):
 
     def createItem(self, id, color, desc):
         item = QtGui.QStandardItem()
-        item.setText('{} {} <font color="#{:02x}{:02x}{:02x}">■</font>'.format(
-            desc, id, *color
+        item.setText('<font color="#{:02x}{:02x}{:02x}">■</font>{} {}'.format(
+            *color[0:3], desc, id,
         ))
         obj = struct(id=id, color=color, desc=desc)
         item.setData(obj, Qt.UserRole)
@@ -48,6 +48,12 @@ class TaglistWidget(QtWidgets.QTreeView):
         if childs:
             for c in childs:
                 self.addChild(item, **c)
+
+    def insertItem(self, parent, item, pos):
+        if parent:
+            parent.insertRow(pos, item)
+        else:
+            self.model().insertRow(pos, item)
 
     def loadFromJson(self, js):
         self.clear()
@@ -113,7 +119,7 @@ class TaglistWidget(QtWidgets.QTreeView):
         self.model().setItem(self.model().rowCount(), 0, item)
         item.setSizeHint(self.itemDelegate().sizeHint(None, None))
 
-    def addTag(self):
+    def insertTag_(self, func):
         dlg = TagEditDialog(self)
         pos = QtGui.QCursor.pos()
         pos = self.mapFromGlobal(pos)
@@ -122,8 +128,17 @@ class TaglistWidget(QtWidgets.QTreeView):
         ok = dlg.exec()
         if ok:
             obj = dlg.getTagObj()
-            item = self.createItem(obj.id, obj.color, obj.desc)
-            self.currentItem()
+            new_item = self.createItem(obj.id, obj.color, obj.desc)
+            cur_item = self.currentItem()
+            if func:
+                func(cur_item, new_item)
+
+    def addTag(self):
+        self.insertTag_(lambda cur_item, new_item: self.insertItem(
+            cur_item.parent(), new_item, cur_item.row()+1))
+
+    def insertTag(self):
+        self.insertTag_(lambda cur_item, new_item: self.insertItem(cur_item, new_item, 0))
 
     def mousePressEvent(self, ev):
         super(TaglistWidget, self).mousePressEvent(ev)

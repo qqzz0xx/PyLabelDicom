@@ -112,6 +112,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr('Delete the selected polygons'),
             enabled=False)
 
+        deleteAll_ = action(
+            self.tr('Delete All'),
+            self.deleteSelectedShape,
+            'delete',
+            self.tr('Delete all polygons'),
+            enabled=False)
+
         edit_ = action('&Edit Label', lambda: self.toggleDrawMode(None),
                        'edit', 'Modify the label of the selected polygon',
                        enabled=False)
@@ -145,11 +152,18 @@ class MainWindow(QtWidgets.QMainWindow):
                             slot=lambda: self.colorTableWidget.deleteSelected())
         addTag_ = action(self.tr('&Add Tag'),
                          slot=lambda: self.colorTableWidget.addTag())
+        insertTag_ = action(self.tr('&Insert Tag'),
+                            slot=lambda: self.colorTableWidget.insertTag())
 
         fitWindow_ = action(self.tr('&Fit Window'),
                             slot=self.fitWindow,
                             icon='fit-window',
                             tip=self.tr('Zoom follows window size'))
+
+        undo_ = action(self.tr('&Undo'),
+                       slot=self.undo,
+                       icon='undo',
+                       tip=self.tr('undo'))
 
         self.zoom_widget = ZoomWidget()
         zoom_ = QtWidgets.QWidgetAction(self)
@@ -176,6 +190,8 @@ class MainWindow(QtWidgets.QMainWindow):
             endTag=endTag_,
             deleteTag=deleteTag_,
             fitWindow=fitWindow_,
+            deleteAll=deleteAll_,
+            undo=undo_,
             # load=load_,
 
             fileMenu=(
@@ -199,8 +215,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 createBoxMode_,
                 None,
                 edit_,
+                undo_,
                 None,
                 delete_,
+                deleteAll_,
             ),
             selectionMenu=(
                 nextTag_,
@@ -220,6 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             tagListMenu=(
                 addTag_,
+                insertTag_,
                 deleteTag_,
             )
         )
@@ -229,6 +248,10 @@ class MainWindow(QtWidgets.QMainWindow):
             openDir_,
             save_,
             saveAs_,
+            None,
+            delete_,
+            deleteAll_,
+            undo_,
             None,
             createMode_,
             edit_,
@@ -634,6 +657,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dirty = True
         self.actions.save.setEnabled(True)
         self.actions.saveAs.setEnabled(True)
+        self.actions.deleteAll.setEnabled(len(self.allLabelList) > 0)
 
     def setClean(self):
         self.dirty = False
@@ -644,11 +668,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createLineMode.setEnabled(True)
         self.actions.createPointMode.setEnabled(True)
         self.actions.createLineStripMode.setEnabled(True)
+        self.actions.deleteAll.setEnabled(False)
 
     def clearLabels(self):
         self.allLabelList.clear()
         self.labelListWidget.clear()
         self.setClean()
+
+    def undo(self):
+        for c in self.view:
+            if c.isEnter:
+                c.undoLastPoint()
 
     def resizeEvent(self, event):
         self.updateCanvas()

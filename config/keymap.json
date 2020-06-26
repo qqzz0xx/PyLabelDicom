@@ -70,5 +70,17 @@
   {
     "key": "W",
     "action": "endTag"
+  },
+  {
+    "key": "Ctrl + Z",
+    "action": "undo"
+  },
+  {
+    "key": "Delete",
+    "action": "delete"
+  },
+  {
+    "key": "Shift + Delete",
+    "action": "deleteAll"
   }
 ]
