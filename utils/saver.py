@@ -1,7 +1,10 @@
+from shape_box import Box3D, ShapeBox
+from qtpy import QtCore
 import json
 import os.path as osp
 from shape import Shape
 from type import Mode_box
+import utils
 
 
 class Saver:
@@ -9,21 +12,18 @@ class Saver:
     suffix = ".json"
 
     def formatShape(self, s):
+        data = dict(
+            label=s.label.__dict__,
+            points=[(p.x(), p.y()) for p in s.points],
+            shape_type=s.shape_type,
+            flags=s.flags,
+            slice_type=s.slice_type,
+            slice_index=s.slice_index,
+            _closed=s._closed,
+        )
         if s.shape_type == Mode_box:
-            data = dict(
-                label=s.label.__dict__,
-                box=s.box.bounds
-            )
-        else:
-            data = dict(
-                label=s.label.__dict__,
-                points=[(p.x(), p.y()) for p in s.points],
-                shape_type=s.shape_type,
-                flags=s.flags,
-                slice_type=s.slice_type,
-                slice_index=s.slice_index,
-                _closed=s._closed,
-            )
+            data['box'] = s.box.bounds
+
         return data
 
     def saveLabels(self, dirname, shapes, imagePath):
@@ -42,14 +42,19 @@ class Saver:
 
         self.saveDirName = dirname
 
-    def loadLabels(self, path):
-        with open(path) as f:
-            j = json.load(f)
-
+    def loadLabels(self, j):
         shapes = []
         for d in j['shapes']:
             s = Shape(None, None)
             s.__dict__.update(d)
+            s.label = utils.struct(**s.label)
+            s.points = [QtCore.QPointF(x, y) for x, y in s.points]
+            if s.shape_type == Mode_box:
+                box = Box3D(s)
+                box.bounds = d['box']
+                box.label = s.label
+                s.box = box
+                s.__class__ = ShapeBox
             shapes.append(s)
 
         return shapes

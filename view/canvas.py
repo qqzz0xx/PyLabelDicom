@@ -572,15 +572,15 @@ class Canvas(QtWidgets.QWidget):
         assert self.current
         self.current.close()
         self.shapes.append(self.current)
-        self.storeShapes()
         self.current = None
         self.setHiding(False)
         self.newShape.emit(self.shapes[-1:])
+        self.storeShapes()
         self.update()
 
     def undoLastPoint(self):
         if not self.current or self.current.isClosed():
-            self.restoreShape()
+            # self.restoreShape()
 
             return
         self.current.popPoint()
@@ -597,7 +597,6 @@ class Canvas(QtWidgets.QWidget):
         return True
 
     def storeShapes(self):
-        return
         shapesBackup = []
         for shape in self.shapes:
             shapesBackup.append(shape.copy())
@@ -616,6 +615,7 @@ class Canvas(QtWidgets.QWidget):
         for shape in self.shapes:
             shape.selected = False
         self.repaint()
+        print('restoreShape', shapesBackup)
 
     def loadShapes(self, shapes, replace=True):
         if replace:

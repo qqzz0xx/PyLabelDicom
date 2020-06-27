@@ -3,7 +3,6 @@ from loader import Loader
 from imagedata_wapper import ImageDataWapper
 from vtk.util import numpy_support
 import qimage2ndarray
-import matplotlib.pyplot as plt
 import numpy as np
 import vtk
 

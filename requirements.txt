@@ -1,0 +1,7 @@
+numpy==1.18.1
+QtPy==1.9.0
+scikit_video==1.1.11
+qimage2ndarray==1.8.3
+PyQt5==5.15.0
+SimpleITK==1.2.4
+vtk==9.0.1

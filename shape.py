@@ -266,3 +266,6 @@ class Shape(object):
 
     def __setitem__(self, key, value):
         self.points[key] = value
+
+    def __str__(self):
+        return '{} slice={} index={}'.format(self.shape_type, self.slice_type, self.slice_index)

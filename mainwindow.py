@@ -355,14 +355,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.colorTableWidget.loadFromJson(j)
                 self._config['tags'] = j
             else:
-                shapes = []
-                for d in j['shapes']:
-                    s = Shape(None, None)
-                    s.__dict__.update(d)
-                    s.label = utils.struct(**s.label)
-                    s.points = [QtCore.QPointF(x, y) for x, y in s.points]
-                    shapes.append(s)
+                self.clearLabels()
+                self.view.clear()
+                saver = Saver()
+                shapes = saver.loadLabels(j)
                 [self.addLabel(s) for s in shapes]
+                for canvas in self.view:
+                    canvas.updateToCenter()
             self._json_file = file
 
     def tagsDelete(self, tags):
